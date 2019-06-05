@@ -1,0 +1,2 @@
+# Package command-line interface
+# cli-command-name = module.path.to.command:function-name
