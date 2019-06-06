@@ -23,12 +23,14 @@ class Message:
     type: Any = str
     lexer: str = ''
     time_format: Optional[str] = '%Y%m%d%H%M%S'
-    string_format: Optional[str] = ''
+    include_timestamp: bool = True
     fields: Dict = field(default_factory=dict)
 
     def __post_init__(self):
+        if self.color is False:
+            self.data = strip_escape(f'{self.data}')
         self.time_format = '%Y%m%d%H%M%S' if self.time_format is None else self.time_format
-        self.string_format = '' if self.string_format is None else self.string_format
+        self.timestamp = self.timestamp.strftime(self.time_format)
         self._update_fields()
 
     @property
@@ -98,7 +100,8 @@ class Message:
             equal = (self.data == other)
         return equal
 
-    def __radd__(self, other):
+    def __radd__(self, other) -> "Message":
+        message = self
         try:
             new_fields = {k: v for k, v in self.fields.items()}
             if isinstance(other, Message):
@@ -113,7 +116,7 @@ class Message:
                 color=self.color,
                 lexer=self.lexer,
                 time_format=self.time_format,
-                string_format=self.string_format,
+                include_timestamp=self.include_timestamp,
                 fields=new_fields,
                 )
         except (AttributeError, TypeError):
@@ -125,15 +128,13 @@ class Message:
                 color=self.color,
                 lexer=self.lexer,
                 time_format=self.time_format,
-                string_format=self.string_format,
+                include_timestamp=self.include_timestamp,
                 fields=self.fields,
                 )
-        except Exception:
-            breakpoint()
         finally:
             return message
 
-    def __add__(self, other):
+    def __add__(self, other) -> "Message":
         try:
             new_fields = {k: v for k, v in self.fields.items()}
             new_fields.update(other.fields)
@@ -144,7 +145,7 @@ class Message:
                 color=self.color,
                 lexer=self.lexer,
                 time_format=self.time_format,
-                string_format=self.string_format,
+                include_timestamp=self.include_timestamp,
                 fields=new_fields,
                 )
         except AttributeError:
@@ -155,39 +156,43 @@ class Message:
                 color=self.color,
                 lexer=self.lexer,
                 time_format=self.time_format,
-                string_format=self.string_format,
+                include_timestamp=self.include_timestamp,
                 fields=self.fields,
                 )
 
     def __str__(self):
         from .formatting import beautify
         data = asdict(self)
-        if json or not self.color:
-            data['data'] = strip_escape(data['data'])
-        if not self.json:
-            if self.lexer and self.color:
-                string = beautify(self.data, lexer=self.lexer)
-            else:
-                string = self.string_format.format(**data) if self.string_format else f'{self.data}'
-        else:
-            msg_fields = ['json', 'color', 'lexer', 'type', 'time_format', 'string_format']
+        # ts = '' if not self.include_timestamp else f'{self.timestamp.strftime(self.time_format)} '
+        ts = '' if not self.include_timestamp else f'{self.timestamp} '
+        if self.json:
+            msg_fields = ['json', 'color', 'lexer', 'type', 'time_format', 'include_timestamp']
             for field_name in msg_fields:
                 data.pop(field_name)
             for field_name, field_value in data.pop('fields', {}).items():
                 data[field_name] = field_value
-            data['timestamp'] = data['timestamp'].strftime(self.time_format)
+            if not self.include_timestamp:
+                data.pop('timestamp')
             string = json.dumps(data, default=fix_json)
+        elif self.lexer and self.color:
+            string = beautify(self.data, lexer=self.lexer)
+        else:
+            string = f'{self.data}'
+        if self.include_timestamp and not self.json:
+            string = f'{ts}{string}'
+        if not self.color:
+            string = strip_escape(string)
         return str(string)
 
 
-def strip_escape(text):
+def strip_escape(text: str) -> str:
     """Remove terminal ascii escape sequences from *text*.
 
     Args:
-        text (str): text to strip escape sequences from
+        text: text to strip escape sequences from
 
     Returns:
-        str: text stripped of escape sequences
+        text stripped of escape sequences
 
     """
     # These are all valid escape sequences... they're probably not

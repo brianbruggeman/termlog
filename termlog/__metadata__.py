@@ -3,9 +3,8 @@ necessary to run setup.py
 """
 import os
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from textwrap import dedent
 from typing import Dict, Tuple
 
 
@@ -57,30 +56,19 @@ class PackageMetadata:
 
     """
     name: str = 'termlog'
-    package_name: str = field(init=False, repr=False, default='')
-    title: str = 'Terminal logging built for docker images'
-    summary: str = f'A logging '
-    description: str = dedent(f"""\
-    {summary}
-
-    This code is in Production and provides a micro-service which
-    provides content discovery for Audience Similarity, PopularEndpoint
-    and PopularityEndpoint.
-
-    The data responses are JSON and enriched with Metadata's data.
-
-    This micro-service relies upon S3 access to authenticate and
-    serve Audience Similarity and PopularEndpoint with Metadata.  Additionally,
-    this micro-service requires access to PopularityEndpoint's API micro-service.
-    """)
-
     version: str = '1.0.0'
+    package_name: str = field(init=False, repr=False, default='')
+    title: str = f'A terminal logging library'
+    summary: str = 'Create beautiful terminal structured '\
+                   'output for developers and production systems'
+
     major: int = field(init=False, repr=False)
     minor: int = field(init=False, repr=False)
     micro: int = field(init=False, repr=False)
     build: str = field(init=False, repr=False)
     release: str = field(init=False, repr=False)
 
+    description: str = f'''{name} v{version}: {title}'''
     author: str = 'Brian Bruggeman'
     author_email: str = 'brian.m.bruggeman@gmail.com'
 
@@ -91,15 +79,27 @@ class PackageMetadata:
     license: str = f'MIT'
 
     url: str = 'https://github.com/brianbruggeman/termlog'
+    bug_reports_url: str = 'https://github.com/brianbruggeman/termlog/issues'
+    documentation_url: str = 'https://termlog.readthedocs.io/en/latest/'
+    travis_CI_url: str = 'https://travis-ci.org/brianbruggeman/termlog'
+    code_coverage_url: str = 'https://codecov.io/gh/brianbruggeman/termlog'
+    project_urls: Dict = field(init=False, repr=False, default_factory=dict)
 
     classifiers: Tuple = (
-        'Programming Language :: Python',
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
-        'Development Status :: 5 - Production/Stable',
-        'Natural Language :: English',
+        'Operating System :: MacOS',
         'Operating System :: POSIX',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 3.7',
-        'Private',  # Prevents uploads to pypi
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Topic :: System :: Logging',
+        'Topic :: Terminals',
+        'Typing :: Typed',
         )
 
     keywords: Tuple = (
@@ -120,17 +120,17 @@ class PackageMetadata:
             'description_content_type', 'keywords', 'home_page', 'download_url',
             'author', 'author_email', 'maintainer', 'maintainer_email',
             'license', 'classifier', 'requires_dist', 'requires_python',
-            'requires_external', 'project_url', 'provides_extra',
+            'requires_external', 'project_urls', 'provides_extra',
             'provides_dist', 'obsoletes_dist',
 
-            'long_description', 'license', 'version',
-            'author', 'author_email', 'maintainer', 'maintainer_email',
-            'license', 'url', 'classifiers', 'keywords'
+            'long_description', 'long_description_content_type',
+            'license', 'version', 'author', 'author_email',
+            'maintainer', 'maintainer_email', 'license', 'url',
+            'classifiers', 'keywords'
             ]
         data = {}
-        for key in self.__annotations__.keys():
+        for key, value in asdict(self).items():
             if key in setup_friendly_fields:
-                value = getattr(self, key)
                 data[key] = value
         data['keywords'] = list(data['keywords'])
         data['classifiers'] = list(data['classifiers'])
@@ -144,6 +144,10 @@ class PackageMetadata:
             self.release = f'{self.name} {self.version} [build: {self.build}]'
         else:
             self.release = f'{self.name} {self.version}'
+        for key, value in asdict(self).items():
+            if key.endswith('_url'):
+                name = ' '.join(key[:-4].split('_')).capitalize()
+                self.project_urls.setdefault(name, value)
 
     def _get_build(self):
         # localhost

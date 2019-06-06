@@ -1,8 +1,9 @@
-import os
 from dataclasses import dataclass
 from typing import Any, Optional
 
 import pytest
+
+from ..colors import true_color_supported
 
 
 @dataclass
@@ -13,11 +14,7 @@ class ColorTestCase:
     expected: str = ''
 
 
-TRUE_COLOR = False
-if 'truecolor' in os.getenv('COLORTERM', ''):
-    TRUE_COLOR = True
-if '24bit' in os.getenv('COLORTERM', ''):
-    TRUE_COLOR = True
+TRUE_COLOR = true_color_supported()
 
 
 @pytest.mark.parametrize('test_case', [
@@ -47,7 +44,7 @@ def test_colors(test_case):
     from .. import colors
 
     func = getattr(colors, test_case.func_name)
-    result = func(message=test_case.message, color=test_case.color)
+    result = func(message=test_case.message, color=test_case.color, truecolor=TRUE_COLOR)
     assert result == test_case.expected, f'TrueColor={TRUE_COLOR} ({tuple(result)}) != ({tuple(test_case.expected)})'
 
 
@@ -106,7 +103,7 @@ def test_colors_rgb(test_case):
     reset = f'\x1b[0m'
     expected = f'{prefix}{test_case.message}{reset}' if test_case.color else f'{test_case.message}'
 
-    result = colors.rgb(red=test_case.red, blue=test_case.blue, green=test_case.green, message=test_case.message, color=test_case.color)
+    result = colors.rgb(red=test_case.red, blue=test_case.blue, green=test_case.green, message=test_case.message, color=test_case.color, truecolor=True)
     assert result == expected
 
 
@@ -134,13 +131,17 @@ def test_colors_factory():
     for index, color in enumerate(all_colors.values()):
         previous = list(all_colors.values())[index - 1]
         assert color != previous
+        assert color.keys() == ('red', 'green', 'blue')
 
     for name, values in new_colors.items():
         original = all_colors[name]
         assert all([original == value for value in values]), f'{name}: {original} not equal to {values}'
 
-    assert len(colors.Color()) == 3
-    assert list(colors.Color()) == [0, 0, 0]
-
-
-
+    color = colors.Color()
+    assert len(color) == 3
+    assert list(color) == [0, 0, 0]
+    assert list(color.keys()) == ['red', 'green', 'blue']
+    for key in color.keys():
+        assert color[key] == getattr(color, key)
+    with pytest.raises(KeyError):
+        assert color['not-a-key']

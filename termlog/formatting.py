@@ -2,17 +2,21 @@ import textwrap
 from pathlib import Path
 from typing import Any, Optional, Union
 
+import pygments
+from pygments.formatters import get_formatter_by_name
+from pygments.lexer import Lexer
+from pygments.lexers import get_lexer_by_name, guess_lexer
+
 from .message import Message
-from .styles import SolarizedStyle
-from .vendored import pygments
-from .vendored.pygments.formatters import get_formatter_by_name
-from .vendored.pygments.lexer import Lexer
-from .vendored.pygments.lexers import get_lexer_by_name, guess_lexer
 
 __all__ = ('beautify', 'format')
 
 
-def beautify(message: Any, indent: int = 0, lexer: Optional[Union[pygments.lexer.Lexer, str]] = None):
+def beautify(
+        message: Any,
+        indent: int = 0,
+        lexer: Optional[Union[pygments.lexer.Lexer, str]] = None
+        ) -> str:
     """Beautify *message*.
 
     Args:
@@ -24,7 +28,7 @@ def beautify(message: Any, indent: int = 0, lexer: Optional[Union[pygments.lexer
         str: beautified message
 
     """
-    formatter = get_formatter_by_name('256', style=SolarizedStyle)
+    formatter = get_formatter_by_name('16m')
 
     indent = max(int(indent or 0), 0)
     if isinstance(message, Path):
@@ -61,8 +65,7 @@ def format(*messages: Any,
            color: bool = None,
            json: bool = None,
            time_format: Optional[str] = None,
-           string_format: Optional[str] = None,
-           add_timestamp: bool = False,
+           add_timestamp: Optional[bool] = None,
            ) -> str:
     """Echo *message*.
 
@@ -75,7 +78,6 @@ def format(*messages: Any,
         lexer: message lexical analyzer
         json: Dump out a structured text
         time_format: control time format
-        string_format: control string format
         add_timestamp: add a timestamp to the output
 
     Returns:
@@ -85,16 +87,22 @@ def format(*messages: Any,
     # Allows echo to be used in settings and prevents circular dependencies
     string = ''
     for index, message in enumerate(messages):
-        message = Message(data=message, lexer=str(lexer) if lexer else '', json=json, color=color, time_format=time_format, string_format=string_format)
-        if index == 0:
-            if not json and add_timestamp:
-                # ts = message.timestamp.strftime(message.time_format)
-                msg = f'{message.timestamp} '
-                string = msg
-        elif index > 0:
-            if not json:
-                msg = ' '
-                string += msg
-        string += message
-    string = str(string)
+        include_timestamp = False
+        if add_timestamp is True:
+            include_timestamp = True
+        if add_timestamp is None:
+            if index == 0:
+                include_timestamp = True
+            elif json is True:
+                include_timestamp = True
+        msg = Message(
+            data=message,
+            lexer=str(lexer) if lexer else '',
+            json=bool(json),
+            color=bool(color),
+            time_format=time_format,
+            include_timestamp=include_timestamp,
+            )
+        separator = ('\n' if json else ' ') if string else ''
+        string = f'{string}{separator}{msg}'
     return string

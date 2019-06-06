@@ -1,53 +1,73 @@
+======
+Readme
+======
+
+Package
+=======
+
+.. image:: http://img.shields.io/badge/license-MIT-brightgreen.svg
+    :target: http://opensource.org/licenses/MIT
+
+.. image:: https://badge.fury.io/py/termlog.svg
+    :target: https://pypi.python.org/pypi/termlog
+
+.. image:: https://travis-ci.org/brianbruggeman/termlog.svg
+    :target: https://travis-ci.org/brianbruggeman/termlog
+
+.. image:: https://codecov.io/gh/brianbruggeman/termlog/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/brianbruggeman/termlog
+
+Termlog: A terminal logging library for logging data both as lexed text or json
+
+
 Motivation
-----------
+==========
 
-A library that can create either json-enabled output or colored, syntax-highlighted
-output for production and development built on f-strings for use in a container
-on a cluster where logging is shipped.
+I love f-strings and I wanted a method of displaying
+beautiful f-strings in command-line interfaces.
+However, I needed a way of simultaneously creating a
+developer friendly text log and producing structured
+text that could be interpreted by a log-shipper in a
+clustered environment.
+
+Termlog will...
+
+* wrap print statements with a new method, `echo`
+* `echo` is fully compatible with print and is meant
+  to be a drop-in replacement
+* `echo` can immediately control: color, json,
+  timestamp, time-format outputs on each invocation
+* Alternatively, a `set_config` command can set the
+  library to use a specific configuration for each subsequent call to `echo`
 
 
-LICENSE
--------
-MIT
-
-
-Examples
---------
+Usage
+=====
 
 .. code-block:: python
 
-    >>> import termlog
-    >>> name = 'world'
-    >>> termlog.echo(f'Hello, {name}', json=True, color=False)
-    {message: 'Hello, world', name='world', timestamp='YYYY-MM-DD HH:MM:SS.msec'}
+     from termlog import blue, echo, red, rgb, set_config
 
-    >>> termlog.echo(f'Hello, {name}', json=False, color=True, add_timestamp=False)
-    'Hello, world'
+     key = 'abc'
+     value = 123
 
-    >>> termlog.echo(f'Hello, {terminal.red(name)}')
-    '2019-06-05 00:34:44.184216 Hello, \1xb[31mworld\1xb[0m'
+     set_config(color=True, json=False)
 
-    >>> command = 'ls -lashtr .'
-    >>> terminal.echo(f'{command}', lexer='bash', add_timestamp=False)
-    '\x1b[38;5;245mls\x1b[39m\x1b[38;5;245m \x1b[39m\x1b[38;5;245m-lashtr\x1b[39m\x1b[38;5;245m \x1b[39m\x1b[38;5;245m.\x1b[39m'
+     echo(f'{red(key)}: {blue(value)}')
+     echo(f'{rgb(message=key, red=71, green=61, blue=139)}: {blue(value)}')
+     echo(f'{key}: {blue(value)}', color=True)
 
-    >>> terminal.echo(f'{command}', lexer='bash', color=False, add_timestamp=False)
-    'ls -lashtr .'
 
 
 Installation
-------------
+============
+
+To install termlog, simply run the following.
 
 .. code-block:: bash
 
-    pip install termlog
+    $ pip install termlog
 
 
-Testing
--------
-
-.. code-block:: bash
-
-    pip install termlog[test]
-    pytest
+.. include::./CONTRIBUTING.rst
 

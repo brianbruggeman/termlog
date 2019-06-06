@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# isort:skip
 """
 Setup.py shouldn't be updated during normal development.
 
@@ -7,15 +8,29 @@ Update:
    requirements.txt  <-- required for package to run
    requirements/*.txt  <-- as appropriate
 """
+# ----------------------------------------------------------------------
+# Version guard
+# ----------------------------------------------------------------------
+import sys
+if sys.version_info < (3, 7):
+    sys.stderr.write('Python 3.7+ is required for installation.\n')
+    sys.tracebacklimit = 0
+    sys.exit(1)
+
+# ----------------------------------------------------------------------
 import datetime
 import itertools
 import os
-import shutil
+import re
 import subprocess
-import sys
+
+# ----------------------------------------------------------------------
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 from setuptools import Command, setup
+
+
 
 try:
     # pip10+
@@ -29,11 +44,6 @@ try:
     import pypandoc
 except ImportError:
     pypandoc = None
-
-if sys.version_info < (3, 6):
-    sys.stderr.write('Python 3.6+ is required for installation.\n')
-    sys.tracebacklimit = 0
-    sys.exit(1)
 
 
 # ----------------------------------------------------------------------
@@ -49,9 +59,9 @@ def main():
 # ----------------------------------------------------------------------
 # Commands
 # ----------------------------------------------------------------------
-class CleanCommand(Command, object):
-    description = 'Remove build artifacts and *.pyc'
-    user_options = list()
+class BuildImageCommand(Command):
+    description: str = 'Builds a docker image'
+    user_options: List = list()
 
     def initialize_options(self):
         pass
@@ -60,34 +70,162 @@ class CleanCommand(Command, object):
         pass
 
     def run(self):
-        repo_path = str(Path(__file__).parent)
-        removables = [
-            'build', '_build', 'dist', 'wheelhouse',
-            '*.egg-info', '*.egg', '.eggs',
-            '.coverage.*', '.coverage',
-            ]
-        for removable in removables:
-            for path in os.scandir(repo_path):
-                if Path(path).match(removable):
-                    if path.is_dir():
-                        shutil.rmtree(path)
-                    elif path.is_file():
-                        os.remove(path)
+        from scripts.build import build_image
+        build_image()
 
-        for root, folders, files in os.walk(repo_path):
-            for folder in folders:
-                if folder == '__pycache__':
-                    fpath = os.path.join(root, folder)
-                    shutil.rmtree(fpath)
-            for filename in files:
-                fpath = os.path.join(root, filename)
-                if Path(filename).match('*.py[co]'):
-                    os.remove(fpath)
+
+class CleanCommand(Command, object):
+    description: str = 'Remove build artifacts and *.pyc'
+    user_options: List = [
+        ('force', 'f', 'Force clean')
+        ]
+
+    def initialize_options(self):
+        self.force: bool = False
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        self.force = True if self.force else False
+        from scripts.clean import clean
+        clean(force=self.force)
+
+
+class CheckCommand(Command, object):
+    description: str = 'Check build using twine check'
+    user_options: List = [
+        ]
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from scripts.check import check
+        check()
+
+
+class DistCommand(Command, object):
+    description = 'Builds sdist and bdist_wheel for release'
+    user_options: List = list()
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from scripts.build import build_dist
+        build_dist()
+
+
+class LintCommand(Command, object):
+    description = 'Runs linting and style tools'
+    user_options: List = list()
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from scripts.lint import lint
+        lint()
+
+
+class PrereleaseCommand(Command, object):
+    description = 'Runs tests'
+    user_options: List = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from scripts.build import build_dist
+        from scripts.clean import clean
+        from scripts.check import check
+        from scripts.lint import lint
+        from scripts.test import run_test
+        from scripts.push import push_pypi
+
+        clean(force=True)
+        build_dist()
+        lint()
+        check()
+        run_test(release=True, coverage_fail_threshold=75)
+
+
+class ReleaseCommand(Command, object):
+    description = 'Runs tests'
+    user_options: List = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from scripts.build import build_dist
+        from scripts.clean import clean
+        from scripts.check import check
+        from scripts.lint import lint
+        from scripts.test import run_test
+        from scripts.push import push_pypi
+
+        clean(force=True)
+        build_dist()
+        lint()
+        check()
+        run_test(release=True, coverage_fail_threshold=75)
+        push_pypi()
+
+
+class TestCommand(Command, object):
+    description = 'Runs tests'
+    user_options: List = [
+        ('release', 'r', 'Run tests as release mode'),
+        ('threshold', 't', 'Threshold for coverage failure'),
+        ]
+
+    def initialize_options(self):
+        self.threshold: int = 75
+        self.release: bool = False
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from scripts.test import run_test
+        run_test(release=self.release, coverage_fail_threshold=self.threshold)
+
+
+class UploadCommand(Command, object):
+    description = 'Push package to pypi'
+    user_options: List = list()
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from scripts.push import push_pypi
+        push_pypi()
 
 
 class InstallCommandCompletionCommand(Command, object):
     description = 'Install command-completions for shell'
-    user_options = list()
+    user_options: List = list()
 
     def initialize_options(self):
         pass
@@ -264,7 +402,9 @@ def get_package_metadata(top_path=None, package_name=None):
     requirements, dependency_links = get_package_requirements(top_path=repo_path)
     packages, modules, namespaces = find_packages(top_package_name=metadata['name'])
     # Package Properties
-    metadata.setdefault('long_description', metadata.get('doc') or get_readme())
+    long_description, long_description_content_type = get_readme()
+    metadata['long_description'] = long_description
+    metadata['long_description_content_type'] = long_description_content_type
     metadata.setdefault('packages', packages)
     # metadata.setdefault('include_package_data', True)
 
@@ -286,6 +426,9 @@ def get_package_metadata(top_path=None, package_name=None):
     year = datetime.datetime.now().year
     license = get_license() or 'Copyright {year} - all rights reserved'.format(year=year)
     metadata.setdefault('license', license)
+
+    metadata.setdefault('classifiers', [])
+    metadata['classifiers'] = list(metadata['classifiers'])
 
     # Extra ingestion
     metadata.setdefault('data_files', [('', find_data_files(repo_path))])
@@ -352,29 +495,47 @@ def get_package_requirements(top_path=None):
     return requirements, list(sorted(dependency_links))
 
 
-def get_readme(top_path=None):
+def get_readme(top_path: Optional[Path] = None) -> Tuple[str, str]:
     """Read the readme for the repo"""
-    path = top_path or os.path.realpath(os.path.dirname(__file__))
-    files = {f.lower(): f for f in os.listdir(path)}
-    permutations = itertools.product(['readme'], ['.md', '.rst', '.txt'])
-    files = [os.path.join(path, f) for l, f in files.items() if l in permutations]
     readme = ''
-    for filepath in files:
-        if pypandoc and filepath.endswith('.md'):
-            readme = pypandoc.convert(filepath, 'rst')
-            break
+    path = Path(__file__).parent if top_path is None else top_path
+    paths = {p.relative_to(path) for p in path.glob('*')}
+    permutations = [
+        ''.join(permutation)
+        for permutation in itertools.product(['readme'], ['', '.md', '.rst', '.txt'])
+        ]
+    filepaths = {p for p in paths if p.name.lower() in permutations}
+    content_type = 'text/x-rst'  # see: https://packaging.python.org/specifications/core-metadata/#description-content-type
+    # Grabs the first one found
+    for filepath in filepaths:
+        readme = filepath.read_text('utf-8')
+        if filepath.name.endswith('.txt'):
+            content_type = 'text/plain'
+        elif filepath.name.endswith('.md'):
+            content_type = 'text/markdown'
+        elif filepath.name.endswith('.rst'):
+            content_type = 'text/x-rst'
         else:
-            with open(filepath, 'r') as stream:
-                readme = stream.read()
-                break
-    return readme
+            content_type = 'text/plain'
+        break
+    # See: https://github.com/pypa/setuptools/issues/1390
+    readme = re.sub(pattern='\n\n+', repl='\n\n', string=readme)
+    return readme, content_type
 
 
 def get_setup_commands():
     """Returns setup command class list"""
     commands = {
-        'clean': CleanCommand,
+        'build_image': BuildImageCommand,
+        'check': CheckCommand,
         'cli': InstallCommandCompletionCommand,
+        'clean': CleanCommand,
+        'dist': DistCommand,
+        'lint': LintCommand,
+        'prerelease': PrereleaseCommand,
+        'release': ReleaseCommand,
+        'test': TestCommand,
+        'upload': UploadCommand,
         }
     return commands
 

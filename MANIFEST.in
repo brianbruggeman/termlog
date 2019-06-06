@@ -13,12 +13,11 @@ include *.cfg
 include *.py
 
 # Project
-graft termlog
-
-# TODO: Decide on whether it makes sense to include these in the build image
-graft requirements
-graft tests
 graft docs
+graft requirements
+graft termlog
+graft termlog/vendored/licenses
+graft tests
 
 # Prune unwanted folders
 

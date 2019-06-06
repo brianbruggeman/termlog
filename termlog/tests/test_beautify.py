@@ -8,30 +8,22 @@ import pytest
 @dataclass
 class BeautifyData:
     message: Any
-    output: str = ''
+    expected: str = ''
     indent: int = 0
     lexer: Any = None
 
 
 @pytest.mark.parametrize('test_data', [
-    BeautifyData('a', output='\x1b[38;5;247ma\x1b[39m'),
-    BeautifyData('ls', lexer='bash', output='\x1b[38;5;245mls\x1b[39m'),
-    BeautifyData('SELECT * FROM some_table;', output='\x1b[38;5;100mSELECT\x1b[39m\x1b[38;5;245m \x1b[39m\x1b[38;5;245m*\x1b[39m\x1b[38;5;245m \x1b[39m\x1b[38;5;100mFROM\x1b[39m\x1b[38;5;245m \x1b[39m\x1b[38;5;247msome_table\x1b[39m\x1b[38;5;245m;\x1b[39m'),
-    BeautifyData('SELECT * FROM some_table;', lexer='postgres', output='\x1b[38;5;100mSELECT\x1b[39m\x1b[38;5;245m \x1b[39m\x1b[38;5;245m*\x1b[39m\x1b[38;5;245m \x1b[39m\x1b[38;5;100mFROM\x1b[39m\x1b[38;5;245m \x1b[39m\x1b[38;5;247msome_table\x1b[39m\x1b[38;5;245m;\x1b[39m'),
-    BeautifyData(
-        '''\
-          File "<stdin>", line 1, in <module>
-        ''',
-        lexer='py3tb',
-        output='\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166mF\x1b[39m\x1b[38;5;166mi\x1b[39m\x1b[38;5;166ml\x1b[39m\x1b[38;5;166me\x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m"\x1b[39m\x1b[38;5;166m<\x1b[39m\x1b[38;5;166ms\x1b[39m\x1b[38;5;166mt\x1b[39m\x1b[38;5;166md\x1b[39m\x1b[38;5;166mi\x1b[39m\x1b[38;5;166mn\x1b[39m\x1b[38;5;166m>\x1b[39m\x1b[38;5;166m"\x1b[39m\x1b[38;5;166m,\x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166ml\x1b[39m\x1b[38;5;166mi\x1b[39m\x1b[38;5;166mn\x1b[39m\x1b[38;5;166me\x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m1\x1b[39m\x1b[38;5;166m,\x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166mi\x1b[39m\x1b[38;5;166mn\x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m<\x1b[39m\x1b[38;5;166mm\x1b[39m\x1b[38;5;166mo\x1b[39m\x1b[38;5;166md\x1b[39m\x1b[38;5;166mu\x1b[39m\x1b[38;5;166ml\x1b[39m\x1b[38;5;166me\x1b[39m\x1b[38;5;166m>\x1b[39m\n\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m\x1b[38;5;166m \x1b[39m',
-        ),
-    BeautifyData(Path('.'), output='\x1b[38;5;245m.\x1b[39m'),
-
+    BeautifyData('a', expected='a'),  # expected='\x1b[38;5;247ma\x1b[39m'),
+    BeautifyData('ls -lashtr $HOME', lexer='bash', expected='ls -lashtr \x1b[38;2;25;23;124m$HOME\x1b[39m'),
+    BeautifyData('SELECT * FROM some_table;', expected='\x1b[38;2;0;128;0;01mSELECT\x1b[39;00m \x1b[38;2;102;102;102m*\x1b[39m \x1b[38;2;0;128;0;01mFROM\x1b[39;00m some_table;'),
+    BeautifyData('SELECT * FROM some_table;', lexer='postgres', expected='\x1b[38;2;0;128;0;01mSELECT\x1b[39;00m \x1b[38;2;102;102;102m*\x1b[39m \x1b[38;2;0;128;0;01mFROM\x1b[39;00m some_table;'),
+    BeautifyData(Path('.'), expected='.'),
     ])
 def test_beautify(test_data):
     from ..formatting import beautify
 
     input_params = asdict(test_data)
-    output = input_params.pop('output')
+    expected = input_params.pop('expected')
     result = beautify(**input_params)
-    assert result == output, f'{result} did not match {output}, {(result,)}'
+    assert result == expected, f'{result} did not match {expected}, {(result,)}'
