@@ -68,5 +68,6 @@ jobs:
       python: "3.7"
       install:
         - python -m pip install --upgrade pip setuptools twine wheel
+        - pip install .[all]
       script:
         - python setup.py prerelease
