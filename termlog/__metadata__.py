@@ -56,7 +56,7 @@ class PackageMetadata:
 
     """
     name: str = 'termlog'
-    version: str = '1.0.1'
+    version: str = '1.0.2'
     package_name: str = field(init=False, repr=False, default='')
     title: str = f'A terminal logging library'
     summary: str = 'Create beautiful terminal structured '\
