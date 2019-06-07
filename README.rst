@@ -14,8 +14,9 @@ Package
 .. image:: https://travis-ci.org/brianbruggeman/termlog.svg
     :target: https://travis-ci.org/brianbruggeman/termlog
 
-.. image:: https://codecov.io/gh/brianbruggeman/termlog/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/brianbruggeman/termlog
+.. image:: https://codecov.io/gh/brianbruggeman/termlog/branch/develop/graph/badge.svg?token=y6xPnPtcdc
+  :target: https://codecov.io/gh/brianbruggeman/termlog
+
 
 Termlog: A terminal logging library for logging data both as lexed text or json
 
