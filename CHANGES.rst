@@ -3,6 +3,23 @@ Changes
 ========
 
 
+1.1.0
+-----
+* Drops extraneous color functions and now uses colors directly
+* Adds support for dim
+* Normalizes colors to use standard ansi color codes unless explicitly calling truecolor
+* Adds demo script
+
+
+1.0.2
+-----
+* Fixes travis bugs
+
+
+1.0.1
+-----
+* Fixes test bugs
+
 1.0
 ---
 

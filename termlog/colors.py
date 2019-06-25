@@ -5,14 +5,39 @@ output.
 
 """
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
 from .decorations import factory
 
 __all__ = (
-    'black', 'blue', 'cyan', 'green', 'grey', 'magenta', 'rgb', 'red',
-    'yellow', 'white', 'Color'
+    'bright_black',
+    'dim_black',
+    'black',
+    'bright_blue',
+    'dim_blue',
+    'blue',
+    'bright_cyan',
+    'dim_cyan',
+    'cyan',
+    'bright_green',
+    'dim_green',
+    'green',
+    'grey',
+    'bright_magenta',
+    'dim_magenta',
+    'magenta',
+    'rgb',
+    'bright_red',
+    'dim_red',
+    'red',
+    'bright_yellow',
+    'dim_yellow',
+    'yellow',
+    'bright_white',
+    'dim_white',
+    'white',
+    'Color'
     )
 
 
@@ -46,9 +71,12 @@ BLINK: str = f'{ESCAPE}[5m'
 STROBE: str = f'{ESCAPE}[6m'
 INVERTED: str = f'{ESCAPE}[7m'
 HIDDEN: str = f'{ESCAPE}[8m'
+STRIKE_THROUGH: str = f'{ESCAPE}[9m'
+DOUBLE_UNDERLINE: str = f'{ESCAPE}[21m'
 
 
-@factory(names=['red', 'green', 'blue'], repository=_colors)
+@factory(names=['red', 'green', 'blue'], repository=_colors)  # look up color by rgb value
+# @factory(names=['name'], repository=_colors)  # look up color by name
 @dataclass
 class Color:
     """A data structure for packaging up Color display information
@@ -81,6 +109,7 @@ class Color:
     true_color_prefix: str = f'{ESCAPE}[38;2;{{red}};{{green}};{{blue}}m'
     suffix: str = f'{ESCAPE}[0m'
     truecolor: bool = TRUE_COLOR_SUPPORTED
+    name: str = ''
 
     # style attributes
     dim: bool = False
@@ -93,43 +122,43 @@ class Color:
     strobe: bool = False
 
     def __post_init__(self):
-        # cap red, green and blue
-        prefix_mapping = {
-            (0, 0, 0): 30,  # black
-            (255, 0, 0): 31,  # red
-            (0, 255, 0): 32,  # green
-            (255, 255, 0): 33,  # yellow
-            (0, 0, 255): 34,  # blue
-            (255, 0, 255): 35,  # magenta
-            (0, 255, 255): 36,  # cyan
-            (255, 255, 255): 37,  # white
-            (127, 127, 127): 37,  # grey
-            }
-        if self.color_prefix == '':
-            key = self.red, self.green, self.blue
-            mapped = prefix_mapping.get(key)
-            self.color_prefix = f'{ESCAPE}[{mapped}m' or ''
-            if key == (127, 127, 127) and self.color_prefix:
-                self.color_prefix += DIM
-        if not self.color_prefix:
-            self.color_prefix = self.true_color_prefix
+        # Cap red, green and blue to integer values
         self.red = max(min(int(self.red or 0), 255), 0)
         self.green = max(min(int(self.green or 0), 255), 0)
         self.blue = max(min(int(self.blue or 0), 255), 0)
 
+        self.true_color_prefix = self.true_color_prefix.format(red=self.red, green=self.green, blue=self.blue)
+        if not self.color_prefix:
+            self.color_prefix = self.true_color_prefix
+
+    def __hash__(self):
+        return hash((self.red, self.green, self.blue))
+
     def __call__(self, message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
+        """Colors a message
+
+        Args:
+            color: flag to disable color entirely
+            truecolor: flag to explicitly enable truecolor
+
+        Returns:
+            message with escape sequences for terminal colors
+
+        """
         truecolor = self.truecolor if truecolor is None else truecolor
-        if color:
-            if truecolor:
-                prefix = self.true_color_prefix.format(**asdict(self))
-            else:
-                prefix = self.color_prefix
+        colored_message = message
+        prefix = ''
+        if truecolor:
+            prefix = self.true_color_prefix
+        elif color:
+            prefix = self.color_prefix
+        if prefix:
             if self.hidden:
                 prefix += HIDDEN
             else:
-                if self.dim:
+                if self.dim and not truecolor:
                     prefix += DIM
-                elif self.bright:
+                elif self.bright and not truecolor:
                     prefix += BRIGHT
                 if self.italic:
                     prefix += ITALIC
@@ -139,9 +168,8 @@ class Color:
                     prefix += BLINK
                 if self.strobe:
                     prefix += STROBE
-            return f'{prefix}{message}{self.suffix}'
-        else:
-            return f'{message}'
+            colored_message = f'{prefix}{message}{self.suffix}'
+        return colored_message
 
     def __eq__(self, other):
         return id(self) == id(other)
@@ -166,134 +194,35 @@ class Color:
 
 
 # Set simple terminal colors
-BLACK = Color(0, 0, 0, color_prefix=f'{ESCAPE}[30m')
-RED = Color(255, 0, 0, color_prefix=f'{ESCAPE}[31m')
-GREEN = Color(0, 255, 0, color_prefix=f'{ESCAPE}[32m')
-YELLOW = Color(255, 255, 0, color_prefix=f'{ESCAPE}[33m')
-BLUE = Color(0, 0, 255, color_prefix=f'{ESCAPE}[34m')
-MAGENTA = Color(255, 0, 255, color_prefix=f'{ESCAPE}[35m')
-CYAN = Color(0, 255, 255, color_prefix=f'{ESCAPE}[36m')
-WHITE = Color(255, 255, 255, color_prefix=f'{ESCAPE}[37m')
-GREY = Color(127, 127, 127, color_prefix=f'{ESCAPE}[37m{ESCAPE}[2m')
+#  Default colors here do not follow a standard.
+#  TODO: Create a palette and initialize colors with a palette
+black = Color(50, 50, 50, color_prefix=f'{ESCAPE}[30m', name='black', truecolor=False)
+red = Color(170, 0, 0, color_prefix=f'{ESCAPE}[31m', name='red', truecolor=False)
+green = Color(0, 170, 0, color_prefix=f'{ESCAPE}[32m', name='green', truecolor=False)
+yellow = Color(170, 170, 0, color_prefix=f'{ESCAPE}[33m', name='yellow', truecolor=False)
+blue = Color(0, 0, 170, color_prefix=f'{ESCAPE}[34m', name='blue', truecolor=False)
+magenta = Color(170, 0, 170, color_prefix=f'{ESCAPE}[35m', name='magenta', truecolor=False)
+cyan = Color(0, 170, 170, color_prefix=f'{ESCAPE}[36m', name='cyan', truecolor=False)
+white = Color(128, 128, 128, color_prefix=f'{ESCAPE}[37m', name='white', truecolor=False)
 
+dim_black = Color(0, 0, 0, color_prefix=f'{ESCAPE}[30m', name='dim black', dim=True, truecolor=False)
+dim_red = Color(85, 0, 0, color_prefix=f'{ESCAPE}[31m', name='dim red', dim=True, truecolor=False)
+dim_green = Color(0, 85, 0, color_prefix=f'{ESCAPE}[32m', name='dim green', dim=True, truecolor=False)
+dim_yellow = Color(85, 85, 0, color_prefix=f'{ESCAPE}[33m', name='dim yellow', dim=True, truecolor=False)
+dim_blue = Color(0, 0, 85, color_prefix=f'{ESCAPE}[34m', name='dim blue', dim=True, truecolor=False)
+dim_magenta = Color(85, 0, 85, color_prefix=f'{ESCAPE}[35m', name='dim magenta', dim=True, truecolor=False)
+dim_cyan = Color(0, 85, 85, color_prefix=f'{ESCAPE}[36m', name='dim cyan', dim=True, truecolor=False)
+dim_white = Color(85, 85, 85, color_prefix=f'{ESCAPE}[37m', name='dim white', dim=True, truecolor=False)
+grey = dim_white
 
-def black(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add black color to *message*.
-
-    Example:
-        >>> from termlog import black, echo
-        >>> f'{black("black")}'
-        '{ESCAPE}[38;2;0;0;0mblack{ESCAPE}[0m'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, truecolor=truecolor)
-
-
-def blue(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add blue color to *message*.
-
-    Example:
-        >>> from termlog import black, echo
-        >>> echo(f'A {blue("blue")} message')
-        '20190606105532 a {ESCAPE}[38;2;0;0;255mblue{ESCAPE}[0m message'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, blue=255, truecolor=truecolor)
-
-
-def cyan(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add cyan color to *message*.
-
-    Example:
-        >>> from termlog import black, echo, set_config
-        >>> set_config(timestamp=False)
-        >>> echo(f'A {cyan("cyan")} message')
-        'a {ESCAPE}[38;2;0;255;255mcyan{ESCAPE}[0m message'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, green=255, blue=255, truecolor=truecolor)
-
-
-def green(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add green color to *message*.
-
-    Example:
-        >>> from termlog import echo, green
-        >>> msg = green("green")
-        >>> print(msg)
-        '{ESCAPE}[38;2;0;255;0mgreen{ESCAPE}[0m'
-        >>> echo(f'A {msg} message', color=False)
-        '20190606143659 a green message'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, green=255, truecolor=truecolor)
-
-
-def grey(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add grey color to *message*.
-
-    Example:
-        >>> from termlog import echo, grey
-        >>> echo(f'A {grey("grey")} message', json=True)
-        '{"data": "a \u001b[38;2;127;127;127mgrey\u001b[0m message", "timestamp": "20190606144743"}'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, red=127, green=127, blue=127, truecolor=truecolor)
-
-
-def magenta(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add orange color to *message*.
-
-    Example:
-        >>> from termlog import echo, magenta
-        >>> msg = magenta('magenta')
-        >>> echo(f'A {msg} message', json=True)
-        '20190606143659 a {ESCAPE}[38;2;255;0;255mmagenta{ESCAPE}[0m message'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, red=255, blue=255, truecolor=truecolor)
+bright_black = Color(60, 60, 60, color_prefix=f'{ESCAPE}[90m', name='bright black', truecolor=False)
+bright_red = Color(255, 85, 85, color_prefix=f'{ESCAPE}[91m', name='bright red', truecolor=False)
+bright_green = Color(85, 255, 85, color_prefix=f'{ESCAPE}[92m', name='bright green', truecolor=False)
+bright_yellow = Color(255, 255, 85, color_prefix=f'{ESCAPE}[93m', name='bright yellow', truecolor=False)
+bright_blue = Color(85, 85, 255, color_prefix=f'{ESCAPE}[94m', name='bright blue', truecolor=False)
+bright_magenta = Color(255, 85, 255, color_prefix=f'{ESCAPE}[95m', name='bright magenta', truecolor=False)
+bright_cyan = Color(85, 255, 255, color_prefix=f'{ESCAPE}[96m', name='bright cyan', truecolor=False)
+bright_white = Color(255, 255, 255, color_prefix=f'{ESCAPE}[97m', name='bright white', truecolor=False)
 
 
 def rgb(message: Any, red: int = 0, green: int = 0, blue: int = 0, color: bool = True, truecolor: Optional[bool] = None) -> str:
@@ -325,60 +254,3 @@ def rgb(message: Any, red: int = 0, green: int = 0, blue: int = 0, color: bool =
     truecolor = TRUE_COLOR_SUPPORTED if truecolor is None else truecolor
     _color = Color(red=red, green=green, blue=blue, truecolor=truecolor)
     return _color(message, color)
-
-
-def red(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add red color to *message*.
-
-    Example:
-        >>> from termlog import echo, red
-        >>> f'A {red("red")} message'
-        'A {ESCAPE}[38;2;225;0;0mred{ESCAPE}[0m message'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, red=255, truecolor=truecolor)
-
-
-def yellow(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add yellow color to *message*.
-
-    Example:
-        >>> from termlog import echo, yellow
-        >>> f'A {yellow("yellow")} message'
-        'A {ESCAPE}[38;2;225;255;0myellow{ESCAPE}[0m message'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, red=255, green=255, truecolor=truecolor)
-
-
-def white(message: Any, color: bool = True, truecolor: Optional[bool] = None) -> str:
-    """Add white color to *message*.
-
-    Example:
-        >>> from termlog import echo, white
-        >>> f'A {white("white")} message'
-        'A {ESCAPE}[38;2;225;255;255mwhite{ESCAPE}[0m message'
-
-    Args:
-        message: text to color
-        color: enable color on output
-
-    Returns:
-        Colored text if color is enabled
-
-    """
-    return rgb(message=message, color=color, red=255, green=255, blue=255, truecolor=truecolor)
