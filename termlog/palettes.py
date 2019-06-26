@@ -7,13 +7,37 @@ from typing import Dict
 from .colors import Color
 from .decorations import factory
 
-__all__ = ('get_palette', 'set_palette')
+__all__ = ('get_palette', 'set_palette', 'Palette')
 _palettes: Dict[str, 'Palette'] = {}
 
 
 @factory(names=['name'], repository=_palettes)
 @dataclass
 class Palette:
+    """A data structure to capture colors.
+
+    Palettes can be defined which will modify termlog's color
+    and output.
+
+    Example:
+
+        >>> import termlog
+        >>> termlog.red('hi', truecolor=True)
+        '\x1b[38;2;170;0;0mhi\x1b[0m'
+
+        >>> from dataclasses import dataclass, field
+        >>> @dataclass
+            class NewPalette(termlog.Palette):
+                name: str = 'My special palette'
+
+                red: termlog.Color = field(default=termlog.Color(185, 10, 10, term_color=31))
+
+        >>> p = NewPalette()
+        >>> termlog.set_palette(p)
+        >>> termlog.red('hi', truecolor=True)
+        '\x1b[38;2;185;10;10mhi\x1b[0m'
+
+    """
     name: str = ''
     colors: Dict = field(default_factory=dict)
 
