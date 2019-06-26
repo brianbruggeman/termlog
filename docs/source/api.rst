@@ -36,3 +36,12 @@ message
    :members:
    :undoc-members:
    :show-inheritance:
+
+
+palettes
+--------
+
+.. automodule:: termlog.palettes
+   :members:
+   :undoc-members:
+   :show-inheritance:
