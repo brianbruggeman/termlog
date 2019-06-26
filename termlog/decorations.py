@@ -5,8 +5,17 @@ from typing import Any, Dict, List
 
 @dataclass
 class factory:
+    """Caches classes
+
+    Attributes:
+        names: names of class fields to use for caching
+        repository: cache dictionary
+        capture_subclasses: also cache subclasses
+
+    """
     names: List[str] = field(default_factory=list)
     repository: Dict[Any, Any] = field(repr=False, default_factory=dict)
+    capture_subclasses: bool = False
 
     def __repr__(self):
         return f'{self.__class__.__name__}(names={self.names}, count={len(self.repository)})'

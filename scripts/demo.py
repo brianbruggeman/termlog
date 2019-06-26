@@ -10,7 +10,6 @@ saturated dark value (dim black)
 import colorsys
 import os
 
-
 from termlog import (
     Color,
     black,
@@ -39,7 +38,7 @@ from termlog import (
     red,
     white,
     yellow
-    )
+)
 
 colors = [
     bright_black,
@@ -105,4 +104,3 @@ if __name__ == '__main__':
     build_color_wheel(columns=cols)
     for color in colors:
         echo(f'{color.name:>15}: {color("color")} | {color("truecolor", truecolor=True)}')
-

@@ -9,6 +9,7 @@ Changes
 * Adds support for dim
 * Normalizes colors to use standard ansi color codes unless explicitly calling truecolor
 * Adds demo script
+* Adds palettes
 
 
 1.0.2
