@@ -1,9 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from itertools import product
 from typing import Any, Optional
 
 import pytest
 
-from ..colors import true_color_supported
+from ..constants import PREFIX, RESET, SUFFIX, TRUEPREFIX, true_color_supported
 
 
 @dataclass
@@ -11,41 +12,54 @@ class ColorTestCase:
     func_name: str
     message: Any = ''
     color: Optional[bool] = None
+    truecolor: Optional[bool] = true_color_supported()
     expected: str = ''
 
+    def __str__(self):
+        return ' '.join(f'{key}={value}' for key, value in asdict(self).items())
 
-TRUE_COLOR = true_color_supported()
 
-
-@pytest.mark.parametrize('test_case', [
+test_cases = [
     # standard uses
-    ColorTestCase('black', message='hi', color=True, expected='\x1b[30mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;0;0;0mhi\x1b[0m'),
-    ColorTestCase('blue', message='hi', color=True, expected='\x1b[34mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;0;0;255mhi\x1b[0m'),
-    ColorTestCase('cyan', message='hi', color=True, expected='\x1b[36mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;0;255;255mhi\x1b[0m'),
-    ColorTestCase('green', message='hi', color=True, expected='\x1b[32mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;0;255;0mhi\x1b[0m'),
-    ColorTestCase('grey', message='hi', color=True, expected='\x1b[37m\x1b[2mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;127;127;127mhi\x1b[0m'),
-    ColorTestCase('magenta', message='hi', color=True, expected='\x1b[35mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;255;0;255mhi\x1b[0m'),
-    ColorTestCase('red', message='hi', color=True, expected='\x1b[31mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;255;0;0mhi\x1b[0m'),
-    ColorTestCase('yellow', message='hi', color=True, expected='\x1b[33mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;255;255;0mhi\x1b[0m'),
-    ColorTestCase('white', message='hi', color=True, expected='\x1b[37mhi\x1b[0m' if not TRUE_COLOR else f'\x1b[38;2;255;255;255mhi\x1b[0m'),
+    ColorTestCase('black', message='hi', color=True, truecolor=False, expected=f'{PREFIX}30{SUFFIX}hi{RESET}'),
+    ColorTestCase('red', message='hi', color=True, truecolor=False, expected=f'{PREFIX}31{SUFFIX}hi{RESET}'),
+    ColorTestCase('green', message='hi', color=True, truecolor=False, expected=f'{PREFIX}32{SUFFIX}hi{RESET}'),
+    ColorTestCase('yellow', message='hi', color=True, truecolor=False, expected=f'{PREFIX}33{SUFFIX}hi{RESET}'),
+    ColorTestCase('blue', message='hi', color=True, truecolor=False, expected=f'{PREFIX}34{SUFFIX}hi{RESET}'),
+    ColorTestCase('magenta', message='hi', color=True, truecolor=False, expected=f'{PREFIX}35{SUFFIX}hi{RESET}'),
+    ColorTestCase('cyan', message='hi', color=True, truecolor=False, expected=f'{PREFIX}36{SUFFIX}hi{RESET}'),
+    ColorTestCase('white', message='hi', color=True, truecolor=False, expected=f'{PREFIX}37{SUFFIX}hi{RESET}'),
+
+    # truecolor uses
+    ColorTestCase('black', message='hi', color=True, truecolor=True, expected=f'{TRUEPREFIX}30;30;30{SUFFIX}hi{RESET}'),
+    ColorTestCase('blue', message='hi', color=True, truecolor=True, expected=f'{TRUEPREFIX}0;0;170{SUFFIX}hi{RESET}'),
+    ColorTestCase('cyan', message='hi', color=True, truecolor=True, expected=f'{TRUEPREFIX}0;170;170{SUFFIX}hi{RESET}'),
+    ColorTestCase('green', message='hi', color=True, truecolor=True, expected=f'{TRUEPREFIX}0;170;0{SUFFIX}hi{RESET}'),
+    ColorTestCase('magenta', message='hi', color=True, truecolor=True, expected=f'{TRUEPREFIX}170;0;170{SUFFIX}hi{RESET}'),
+    ColorTestCase('red', message='hi', color=True, truecolor=True, expected=f'{TRUEPREFIX}170;0;0{SUFFIX}hi{RESET}'),
+    ColorTestCase('yellow', message='hi', color=True, truecolor=True, expected=f'{TRUEPREFIX}170;170;0{SUFFIX}hi{RESET}'),
+    ColorTestCase('white', message='hi', color=True, truecolor=True, expected=f'{TRUEPREFIX}170;170;170{SUFFIX}hi{RESET}'),
 
     # test uncolored uses
-    ColorTestCase('black', message='hi', color=False, expected='hi'),
-    ColorTestCase('blue', message='hi', color=False, expected='hi'),
-    ColorTestCase('cyan', message='hi', color=False, expected='hi'),
-    ColorTestCase('green', message='hi', color=False, expected='hi'),
-    ColorTestCase('grey', message='hi', color=False, expected='hi'),
-    ColorTestCase('magenta', message='hi', color=False, expected='hi'),
-    ColorTestCase('red', message='hi', color=False, expected='hi'),
-    ColorTestCase('yellow', message='hi', color=False, expected='hi'),
-    ColorTestCase('white', message='hi', color=False, expected='hi'),
-    ])
-def test_colors(test_case):
-    from .. import colors
+    ColorTestCase('black', message='hi', color=False, truecolor=False, expected='hi'),
+    ColorTestCase('blue', message='hi', color=False, truecolor=False, expected='hi'),
+    ColorTestCase('cyan', message='hi', color=False, truecolor=False, expected='hi'),
+    ColorTestCase('green', message='hi', color=False, truecolor=False, expected='hi'),
+    ColorTestCase('grey', message='hi', color=False, truecolor=False, expected='hi'),
+    ColorTestCase('magenta', message='hi', color=False, truecolor=False, expected='hi'),
+    ColorTestCase('red', message='hi', color=False, truecolor=False, expected='hi'),
+    ColorTestCase('yellow', message='hi', color=False, truecolor=False, expected='hi'),
+    ColorTestCase('white', message='hi', color=False, truecolor=False, expected='hi'),
+    ]
 
-    func = getattr(colors, test_case.func_name)
-    result = func(message=test_case.message, color=test_case.color, truecolor=TRUE_COLOR)
-    assert result == test_case.expected, f'TrueColor={TRUE_COLOR} ({tuple(result)}) != ({tuple(test_case.expected)})'
+
+@pytest.mark.parametrize('test_case', test_cases, ids=list(map(str, test_cases)))
+def test_colors(test_case):
+    import termlog
+
+    func = getattr(termlog, test_case.func_name)
+    result = func(message=test_case.message, color=test_case.color, truecolor=test_case.truecolor)
+    assert result == test_case.expected, f'TrueColor={test_case.truecolor} ({tuple(result)}) != ({tuple(test_case.expected)})'
 
 
 @dataclass
@@ -55,93 +69,26 @@ class RgbColorTestCase:
     blue: int = 0
     message: Any = ''
     color: Optional[bool] = None
+    truecolor: Optional[bool] = None
+
+    def __str__(self):
+        return ' '.join(f'{key}={value}' for key, value in asdict(self).items())
 
 
-@pytest.mark.parametrize('test_case', [
-    # black
-    RgbColorTestCase(red=0, green=0, blue=0, message='hi', color=True),
-    # blue
-    RgbColorTestCase(red=0, green=0, blue=255, message='hi', color=True),
-    # cyan
-    RgbColorTestCase(red=0, green=255, blue=255, message='hi', color=True),
-    # green
-    RgbColorTestCase(red=0, green=255, blue=0, message='hi', color=True),
-    # grey
-    RgbColorTestCase(red=127, green=127, blue=127, message='hi', color=True),
-    # magenta
-    RgbColorTestCase(red=255, green=0, blue=255, message='hi', color=True),
-    # red
-    RgbColorTestCase(red=255, green=0, blue=0, message='hi', color=True),
-    # yellow
-    RgbColorTestCase(red=255, green=255, blue=0, message='hi', color=True),
-    # white
-    RgbColorTestCase(red=255, green=255, blue=255, message='hi', color=True),
+reds = greens = blues = [0, 127, 255]
+truecolors = [True, False]
+rgb_test_cases = []
+for values in product(reds, greens, blues, truecolors):
+    rgb_test_cases.append(RgbColorTestCase(red=values[0], green=values[1], blue=values[2], message='hi', truecolor=values[3]))
 
-    # black
-    RgbColorTestCase(red=0, green=0, blue=0, message='hi', color=False),
-    # blue
-    RgbColorTestCase(red=0, green=0, blue=255, message='hi', color=False),
-    # cyan
-    RgbColorTestCase(red=0, green=255, blue=255, message='hi', color=False),
-    # green
-    RgbColorTestCase(red=0, green=255, blue=0, message='hi', color=False),
-    # grey
-    RgbColorTestCase(red=127, green=127, blue=127, message='hi', color=False),
-    # magenta
-    RgbColorTestCase(red=255, green=0, blue=255, message='hi', color=False),
-    # red
-    RgbColorTestCase(red=255, green=0, blue=0, message='hi', color=False),
-    # yellow
-    RgbColorTestCase(red=255, green=255, blue=0, message='hi', color=False),
-    # white
-    RgbColorTestCase(red=255, green=255, blue=255, message='hi', color=False),
-    ])
+
+@pytest.mark.parametrize('test_case', rgb_test_cases, ids=list(map(str, rgb_test_cases)))
 def test_colors_rgb(test_case):
     from .. import colors
 
     prefix = f'\x1b[38;2;{test_case.red};{test_case.green};{test_case.blue}m'
     reset = f'\x1b[0m'
-    expected = f'{prefix}{test_case.message}{reset}' if test_case.color else f'{test_case.message}'
+    expected = f'{prefix}{test_case.message}{reset}' if test_case.truecolor else f'{test_case.message}'
 
-    result = colors.rgb(red=test_case.red, blue=test_case.blue, green=test_case.green, message=test_case.message, color=test_case.color, truecolor=True)
+    result = colors.rgb(red=test_case.red, blue=test_case.blue, green=test_case.green, message=test_case.message, color=test_case.color, truecolor=test_case.truecolor)
     assert result == expected
-
-
-def test_colors_factory():
-    from .. import colors
-
-    all_colors = {
-        'BLACK': colors.BLACK, 'RED': colors.RED, 'GREEN': colors.GREEN,
-        'BLUE': colors.BLUE, 'CYAN': colors.CYAN, 'MAGENTA': colors.MAGENTA,
-        'YELLOW': colors.YELLOW, 'WHITE': colors.WHITE, 'GREY': colors.GREY
-        }
-
-    new_colors = {
-        'BLACK': [colors.Color(), colors.Color(red=0, green=0, blue=0)],
-        'RED': [colors.Color(red=255), colors.Color(red=255, green=0, blue=0)],
-        'YELLOW': [colors.Color(red=255, green=255), colors.Color(red=255, green=255, blue=0)],
-        'MAGENTA': [colors.Color(red=255, blue=255), colors.Color(red=255, green=0, blue=255)],
-        'CYAN': [colors.Color(green=255, blue=255), colors.Color(red=0, green=255, blue=255)],
-        'BLUE': [colors.Color(blue=255), colors.Color(red=0, green=0, blue=255)],
-        'GREEN': [colors.Color(green=255), colors.Color(red=0, green=255, blue=0)],
-        'WHITE': [colors.Color(red=255, green=255, blue=255)],
-        'GREY': [colors.Color(red=127, green=127, blue=127)],
-        }
-
-    for index, color in enumerate(all_colors.values()):
-        previous = list(all_colors.values())[index - 1]
-        assert color != previous
-        assert color.keys() == ('red', 'green', 'blue')
-
-    for name, values in new_colors.items():
-        original = all_colors[name]
-        assert all([original == value for value in values]), f'{name}: {original} not equal to {values}'
-
-    color = colors.Color()
-    assert len(color) == 3
-    assert list(color) == [0, 0, 0]
-    assert list(color.keys()) == ['red', 'green', 'blue']
-    for key in color.keys():
-        assert color[key] == getattr(color, key)
-    with pytest.raises(KeyError):
-        assert color['not-a-key']
