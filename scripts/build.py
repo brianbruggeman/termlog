@@ -30,8 +30,8 @@ if __name__ == '__main__':
     import click
 
     @click.command()
-    @click.option('-d', '--dist', is_flag=True, help='Build all distribution files')
-    @click.option('-i', '--image', is_flag=True, help='Build image')
+    @click.option('-d/-D', '--dist/--no-dist', is_flag=True, default=True, help='Build all distribution files')
+    @click.option('-i/-I', '--image/--no-image', is_flag=True, default=True, help='Build image')
     def cli(dist, image):
         if dist:
             build_dist()

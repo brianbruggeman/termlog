@@ -32,7 +32,7 @@ if __name__ == '__main__':
     @click.option('-d', '--devpi', is_flag=True, show_default=True, help='Push to devpi')
     @click.option('-e', '--ecr', is_flag=True, show_default=True, help='Push to ecr')
     @click.option('-h', '--docker-hub', is_flag=True, show_default=True, help='Push to docker-hub')
-    @click.option('-p', '--pypi', is_flag=True, show_default=True, help='Push to pypi')
+    @click.option('-p/-P', '--pypi/--no-pypi', is_flag=True, default=True, show_default=True, help='Push to pypi')
     @click.option('-u', '--pypi-url', metavar='URL', default='pypi-test', show_default=True, help='URL to pypi upload location')
     def cli(devpi, ecr, docker_hub, pypi, pypi_url):
         if pypi:
