@@ -100,7 +100,7 @@ class Message:
             equal = (self.data == other)
         return equal
 
-    def __radd__(self, other) -> "Message":
+    def __radd__(self, other) -> 'Message':
         message = self
         try:
             new_fields = {k: v for k, v in self.fields.items()}
@@ -134,7 +134,7 @@ class Message:
         finally:
             return message
 
-    def __add__(self, other) -> "Message":
+    def __add__(self, other) -> 'Message':
         try:
             new_fields = {k: v for k, v in self.fields.items()}
             new_fields.update(other.fields)

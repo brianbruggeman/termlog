@@ -1,5 +1,6 @@
 from typing import Any
 
+from . import palettes
 from .__metadata__ import package_metadata
 from .colors import Color, rgb
 from .formatting import beautify, format

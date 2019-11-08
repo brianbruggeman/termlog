@@ -3,6 +3,13 @@ Changes
 ========
 
 
+1.1.1
+-----
+* Bug fix for indentation squashing
+* Adds strip to palette to remove escape characters
+* Bug fix for style
+
+
 1.1.0
 -----
 * Drops extraneous color functions and now uses colors directly
