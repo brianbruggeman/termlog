@@ -6,6 +6,7 @@ from typing import Dict
 
 from .colors import Color
 from .decorations import factory
+from .message import strip_escape
 
 __all__ = ('get_palette', 'set_palette', 'Palette')
 _palettes: Dict[str, 'Palette'] = {}
@@ -41,11 +42,15 @@ class Palette:
     name: str = ''
     colors: Dict = field(default_factory=dict)
 
-    def __init_subclass__(cls, **kwargs):
+    @staticmethod
+    def strip(string) -> str:
+        """Strips out escape characters from string"""
+        return strip_escape(string)
+
+    def __init_subclass__(cls, **kwargs) -> None:
         if cls.name not in _palettes:
             _palettes[cls.name] = cls()
-            super().__init_subclass__(**kwargs)
-        return _palettes[cls.name]
+            super().__init_subclass__(**kwargs)  # type: ignore
 
     def __post_init__(self):
         for key, value in asdict(self).items():

@@ -53,7 +53,7 @@ def beautify(
         messages = message.split('\n')
         for index, message in enumerate(messages):
             message = pygments.highlight(message, lexer, formatter)
-            messages[index] = message.strip()
+            messages[index] = message.rstrip('\n')
         message = '\n'.join(messages)
     if indent > 0:
         message = textwrap.indent(message, ' ' * indent)
