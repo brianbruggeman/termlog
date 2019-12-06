@@ -2,6 +2,13 @@
 Changes
 ========
 
+1.2.0
+-----
+* Migrates config to its own file
+* Format now produces json based on config
+* Small tweaks to documentation
+* Hopefully benign update to the inspection/frame crawling logic to capture more data for json output
+
 
 1.1.1
 -----

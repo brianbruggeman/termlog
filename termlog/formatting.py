@@ -7,6 +7,7 @@ from pygments.formatters import get_formatter_by_name
 from pygments.lexer import Lexer
 from pygments.lexers import get_lexer_by_name, guess_lexer
 
+from .config import _terminal_config
 from .message import Message
 
 __all__ = ('beautify', 'format')
@@ -67,7 +68,7 @@ def format(*messages: Any,
            time_format: Optional[str] = None,
            add_timestamp: Optional[bool] = None,
            ) -> str:
-    """Echo *message*.
+    """Creates *message*, but does not echo it to a stdout, log, or other
 
     lexers can be passed in, and if they are, the resulting output
     will attempt to be setup
@@ -84,6 +85,11 @@ def format(*messages: Any,
         Tuple[str]: beautified messages
 
     """
+    time_format = time_format if time_format is not None else _terminal_config.time_format
+    add_timestamp = add_timestamp if add_timestamp is not None else _terminal_config.timestamp
+    json = json if json is not None else _terminal_config.json
+    color = color if color is not None else _terminal_config.color
+
     # Allows echo to be used in settings and prevents circular dependencies
     string = ''
     for index, message in enumerate(messages):
@@ -104,5 +110,9 @@ def format(*messages: Any,
             include_timestamp=include_timestamp,
             )
         separator = ('\n' if json else ' ') if string else ''
-        string = f'{string}{separator}{msg}'
+        try:
+            string = f'{string}{separator}{msg}'
+        except TypeError:
+            msg.fields = {}
+            string = f'{string}{separator}{msg}'
     return string
