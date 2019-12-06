@@ -1,0 +1,1 @@
+These are pure unit tests for termlog.

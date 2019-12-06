@@ -37,10 +37,12 @@ class Message:
     def calling_frame(self):
         found = False
         frame = None
+        stopping_functions = ['echo', 'format', 'red']
         for frame in inspect.getouterframes(inspect.currentframe()):
             if found:
                 break
-            found = True if frame.function == 'echo' else False
+            if 'termlog' in frame.filename and frame.function in stopping_functions:
+                found = True
         return None if not (frame and found) else frame
 
     @property
@@ -70,23 +72,29 @@ class Message:
         data = []
         fields = []
         # Grab field names to get data needed for message
-        count = 0
+        count = -1
         while queue:
             count += 1
             node = queue.pop(0)
-            if isinstance(node, (ast.Expr, ast.FormattedValue, )):
+            if isinstance(node, (ast.Expr, ast.FormattedValue, ast.Assign, ast.Starred, ast.Attribute)):
                 queue.append(node.value)
-            elif isinstance(node, (ast.Call,)):
+            elif isinstance(node, (ast.Call, )):
                 # TODO: Find a way to capture the colors here
                 for arg in node.args:
                     queue.append(arg)
-            elif isinstance(node, (ast.JoinedStr,)):
+            elif isinstance(node, (ast.JoinedStr, )):
                 for value in node.values:
                     queue.append(value)
-            elif isinstance(node, (ast.Str,)):
+            elif isinstance(node, (ast.Str, )):
                 data.append(node.s)
-            elif isinstance(node, (ast.Name,)):
+            elif isinstance(node, (ast.Name, )):
                 fields.append(node.id)
+            elif isinstance(node, (ast.BinOp, )):
+                queue.append(node.left)
+                queue.append(node.right)
+            else:
+                print(node, ', '.join([d for d in dir(node) if not d.startswith('_')]))
+
             if count > 1000:  # to prevent a runaway
                 break
         for name in fields:
