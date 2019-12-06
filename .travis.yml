@@ -1,75 +1,74 @@
-dist: xenial   # required for Python 3.7
+dist: xenial
 language: python
-
-
-
 stages:
-  - lint
-  - test
-  - docs
-  - predeploy
-
-
+- lint
+- test
+- docs
+- predeploy
 cache:
   pip: true
   directories:
-    - "$HOME/.cache/isort"
-    - "$HOME/.cache/flake8"
-    - "$HOME/.cache/mypy"
-    - "$HOME/.cache/pre-commit"
-
+  - "$HOME/.cache/isort"
+  - "$HOME/.cache/flake8"
+  - "$HOME/.cache/mypy"
+  - "$HOME/.cache/pre-commit"
 jobs:
   include:
-    - stage: lint
-      python: "3.7"
-      install:
-        - pip install --upgrade --force pip
-        - pip install -r requirements/lint.txt
-        - pip install -r requirements.txt
-        - pip install .
-      script:
-        - ls -lashtr
-        - isort -c
-        - flake8
-        - mypy termlog
-
-    - stage: test
-      python:
-        - "3.7"
-        - "nightly"
-      matrix:
-        allow_failures:
-          - python: nightly
-      install:
-        - pip install --upgrade --force pip pytest
-        - pip install -r requirements/test.txt
-        - pip install -r requirements.txt
-        - pip install .
-        - pip install codecov
-      script:
-        - coverage erase
-        - pytest --cache-clear -vv -r a --cov --cov-report=term-missing --cov-report=term:skip-covered --cov-fail-under=75
-      env:
-        - CODECOV_TOKEN="db11eab9-1a10-45bf-aed0-9d51394dc6dd"
-      after_success:
-        - codecov
-
-    - stage: docs
-      python: "3.7"
-      allow_failures: True
-      install:
-        - pip install --upgrade --force pip
-        - pip install -r requirements/docs.txt
-        - pip install -r requirements.txt
-        - pip install .
-      script:
-        - sphinx-build -b html docs/source build/docs
-
-    - stage: predeploy
-      python: "3.7"
-      install:
-        - pip install --upgrade --force pip pytest
-        - python -m pip install --upgrade pip setuptools twine wheel
-        - pip install .[all]
-      script:
-        - python setup.py prerelease
+  - stage: lint
+    python: '3.7'
+    install:
+    - pip install --upgrade --force pip
+    - pip install -r requirements/lint.txt
+    - pip install -r requirements.txt
+    - pip install .
+    script:
+    - ls -lashtr
+    - isort -c
+    - flake8
+    - mypy termlog
+  - stage: test
+    python:
+    - '3.7'
+    - nightly
+    matrix:
+      allow_failures:
+      - python: nightly
+    install:
+    - pip install --upgrade --force pip pytest
+    - pip install -r requirements/test.txt
+    - pip install -r requirements.txt
+    - pip install .
+    - pip install codecov
+    script:
+    - coverage erase
+    - pytest --cache-clear -vv -r a --cov --cov-report=term-missing --cov-report=term:skip-covered
+      --cov-fail-under=75
+    env:
+    - CODECOV_TOKEN="db11eab9-1a10-45bf-aed0-9d51394dc6dd"
+    after_success:
+    - codecov
+  - stage: docs
+    python: '3.7'
+    allow_failures: true
+    install:
+    - pip install --upgrade --force pip
+    - pip install -r requirements/docs.txt
+    - pip install -r requirements.txt
+    - pip install .
+    script:
+    - sphinx-build -b html docs/source build/docs
+  - stage: deploy
+    python: '3.7'
+    install:
+    - pip install --upgrade --force pip pytest
+    - python -m pip install --upgrade pip setuptools twine wheel
+    - pip install .[all]
+    script:
+    - python setup.py prerelease
+    deploy:
+      provider: pypi
+      user: __token__
+      on:
+        tags: True
+      password:
+        secure: CwVl2ZAATemo9V4UDubmGVFv79MtFWa64+odGcsaOSl1DghTD13CMg3VrXkCfP51N8YxIlyY2DzyAl8GqUvc0hOZeY7TN+pQHUKGiuSjqob3tZ0Lx0k6zPS7nNTvowv0zMo0+ZB2L4jBpz6QeGYwGk7v6J3kXqNv6E5BDCJa4Y7zZE0LCHDYyv41beqpfYEtEoItYCwTjV+P3WWR5yGy6bIUpSoVSWGsCRUiawLT7SruQqKp+GuXuDJn7AkUnCP/kgWq3A/XUOsNwuarLtiNvh6q8Isqj2BG5iXG04csAtxaR37F7yipRHTtbOoMjQfcLU9ohn+2TNW9D99evJD2/HAiymXqZb/FKtDbEZsY3sfqRQAndcQQwZdxwyI9c+pj9HlVAd3BM0mZSYzxgj4UWPG8lGx9BybUuO8kwO99/OphndZYxS3bcdNotlTYdgdkUtZgMJ9h97h3z1XRRUYymdLrZVJzD/H3QqYJYVpOEieHRLSunKjaSOHAHXk/ICJ9zkLRMiHDR5hl3msAWGxRoQNaW5O6kvRaSoUy5hkXKLU5g+F15Cu2/1oo1RQm0mHPSISh2Nn6dFt/LhG/CvaPU10esV9N9SW9cIMv5+nYQP7fYGwirRaiiW3cuYvnVJJKGTMIQxiOEGMG2/3jwXd2ePz7lxYbvfmPgIFQEHd/Yi4=
