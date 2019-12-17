@@ -2,6 +2,11 @@
 Changes
 ========
 
+1.2.1
+-----
+* Drops build field from __metadata__.py
+
+
 1.2.0
 -----
 * Migrates config to its own file
