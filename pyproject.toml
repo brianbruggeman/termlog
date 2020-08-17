@@ -1,9 +1,30 @@
 [tool.poetry]
 name = "termlog"
-version = "1.3.1"
+version = "1.3.2"
 description = "A Terminal logging library"
 authors = ["Brian Bruggeman <Brian.M.Bruggeman@gmail.com>"]
 license = "MIT"
+
+# New attributes
+readme = "README.rst"
+homepage = "https://github.com/brianbruggeman/termlog"
+repository = "https://github.com/brianbruggeman/termlog"
+keywords = ["terminal", "logging", "color", "json"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Typing :: Typed",
+]
+include = [
+    "AUTHORS.rst",
+    "CHANGES.rst",
+    "LICENSE.rst",
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"

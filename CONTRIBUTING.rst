@@ -20,7 +20,7 @@ For a quick-start and testing while development:
 sort
 .. code-block:: bash
 
-    pip install -e .[test]
+    pip install .
     pytest --lf -vv -x
 
 
