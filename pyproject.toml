@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "termlog"
-version = "1.3.0"
+version = "1.3.1"
 description = "A Terminal logging library"
 authors = ["Brian Bruggeman <Brian.M.Bruggeman@gmail.com>"]
 license = "MIT"
@@ -10,16 +10,21 @@ python = "^3.8"
 pygments = "^2.6.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.0.1"
-mypy = "^0.782"
-isort = "^5.4.2"
 black = "^19.10b0"
-pytest-isort = "^1.1.0"
-pytest-xdist = "^2.0.0"
-pytest-mypy = "^0.6.2"
 coverage = "^5.2.1"
-pytest-cov = "^2.10.1"
+isort = "^5.4.2"
+mypy = "^0.782"
+pytest = "^6.0.1"
 pytest-black = "^0.3.10"
+pytest-cov = "^2.10.1"
+pytest-isort = "^1.1.0"
+pytest-mypy = "^0.6.2"
+pytest-xdist = "^2.0.0"
+sphinx = "^3.2.1"
+sphinx_rtd_theme = "^0.5.0"
+sphinxcontrib-plantuml = "^0.18"
+sphinxcontrib-programoutput = "^0.16"
+twine = "^3.2.0"
 
 [tool.isort]
 line_length = 140
@@ -84,7 +89,7 @@ exclude = '''
 '''
 
 
-[tools.pytest]
+[tool.pytest]
 filterwarnings = '''
 # requests and sqlalchemy incorrectly use the modern collections.abc
     ignore::DeprecationWarning
@@ -102,13 +107,20 @@ testpaths = '''
 '''
 
 # These options _can_ be overridden on the command-line invocation.
-addopts = '''
-    # ----- Reporting -----
-    # Reduce spam
-    -p no:logging
-    # Reduce more spam
-    -q
-'''
+addopts =  [
+    "-p", "no:logging",
+    "-r", "a",
+    "-q",
+    "--isort",
+    "--black",
+    "--mypy",
+    "--cache-clear",
+    "-vv",
+    "--cov",
+    "--cov-report=term-missing",
+    "--cov-report=term:skip-covered",
+    "--cov-fail-under=80",
+]
 
 # Ignore files/tests under these paths
 norecursedirs = '''

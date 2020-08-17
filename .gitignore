@@ -122,3 +122,4 @@ terraform/loadtest/*
 terraform/stack/*
 !terraform/stack/README.md
 !terraform/stack/main.tf
+poetry.lock
