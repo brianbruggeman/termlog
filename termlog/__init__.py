@@ -1,14 +1,12 @@
 from typing import Any
 
 from . import palettes
-from .__metadata__ import package_metadata
 from .colors import Color, rgb
 from .formatting import beautify, format
 from .palettes import Palette, get_palette, set_palette
 from .terminal import echo, set_config
 
-__author__ = package_metadata.author
-__version__ = package_metadata.version
+__version__ = "1.3.0"
 
 
 def __getattr__(name: str) -> Any:
@@ -19,7 +17,7 @@ def __getattr__(name: str) -> Any:
     it were part of the top level termlog structure.
 
     """
-    palette = locals()['palette'] = palettes.get_palette()
+    palette = locals()["palette"] = palettes.get_palette()
     # This handles from termlog import *
     #   But from termlog import * prevents updates to the palette,
     #   And this is by design since imports are technically cached within
@@ -40,9 +38,17 @@ def __getattr__(name: str) -> Any:
     #    >>> termlog.red('hi', truecolor=True)
     #    '\x1b[38;2;220;50;47mhi\x1b[0m'
     #
-    if name == '__all__':
+    if name == "__all__":
         return [key for key in palette.__annotations__ if isinstance(getattr(palette, key), Color)] + [
-            'Color', 'rgb', 'format', 'beautify', 'get_palette', 'set_palette', 'Palette', 'echo', 'set_config'
-            ]
+            "Color",
+            "rgb",
+            "format",
+            "beautify",
+            "get_palette",
+            "set_palette",
+            "Palette",
+            "echo",
+            "set_config",
+        ]
     else:
         return getattr(palette, name)

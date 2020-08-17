@@ -22,21 +22,22 @@ class Duration:
         duration: calculated duration in unites
 
     """
+
     seconds: float = field(default=0.0, repr=False, init=True)
-    unit: str = ''
+    unit: str = ""
     duration: float = field(default=0.0, repr=True, init=False)
 
     def __post_init__(self):
         duration = self.seconds
-        current_unit = 'sec'
+        current_unit = "sec"
         if duration < 1.0:
-            for current_unit in ['sec', 'msec', 'usec', 'nsec']:
+            for current_unit in ["sec", "msec", "usec", "nsec"]:
                 if duration < 1.0:
                     duration = duration * 1000
                 else:
                     break
         elif duration > 60.0:
-            for current_unit, interval in {'sec': 60, 'min': 60, 'hour': 24, 'days': 7}.items():
+            for current_unit, interval in {"sec": 60, "min": 60, "hour": 24, "days": 7}.items():
                 if duration >= interval:
                     duration = duration / interval
                 else:
@@ -45,7 +46,7 @@ class Duration:
         self.unit = current_unit
 
     def __str__(self):
-        return f'{self.duration:7.2f} {self.unit}'
+        return f"{self.duration:7.2f} {self.unit}"
 
 
 @dataclass
@@ -55,6 +56,7 @@ class TimedExecutionBlock:
     Times a ``with`` block and provides elapsed time.
 
     """
+
     start: float = 0.0
     end: float = 0.0
 
@@ -79,7 +81,7 @@ class TimedExecutionBlock:
 
     def __str__(self):
         duration, unit = self.human
-        return f'{duration:0.2f} {unit}'
+        return f"{duration:0.2f} {unit}"
 
     def __enter__(self):
         self.start = self.now()
@@ -90,12 +92,12 @@ class TimedExecutionBlock:
 
 
 def benchmark_all(count: int = 1000):
-    readme = (Path(__file__).parent.parent / 'README.rst').read_text('utf-8')
+    readme = (Path(__file__).parent.parent / "README.rst").read_text("utf-8")
     data = [
-        'Hello, World!',
-        'Greetings!',
+        "Hello, World!",
+        "Greetings!",
         readme,
-        ]
+    ]
     benchmark_print(data, count=count)
     benchmark_echo(data, count=count)
 
@@ -118,5 +120,5 @@ def benchmark_echo(data: List[str], count: int = 1000):
         echo(f' `{green("echo")}` took {magenta(f"{duration:.2f}")} {unit}')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     benchmark_all()

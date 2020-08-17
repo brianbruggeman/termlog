@@ -37,47 +37,39 @@ from termlog import (
     magenta,
     red,
     white,
-    yellow
+    yellow,
 )
 
 colors = [
     bright_black,
     black,
     dim_black,
-
     bright_blue,
     blue,
     dim_blue,
-
     bright_cyan,
     cyan,
     dim_cyan,
-
     bright_green,
     green,
     dim_green,
-
     grey,
-
     bright_magenta,
     magenta,
     dim_magenta,
-
     bright_red,
     red,
     dim_red,
-
     bright_white,
     white,
     dim_white,
-
     bright_yellow,
     yellow,
     dim_yellow,
-    ]
+]
 
 
-def build_color_wheel(columns=160, rows=15, symbol='■'):
+def build_color_wheel(columns=160, rows=15, symbol="■"):
     col_step = 255 // columns if columns else 10
     row_step = 255 // rows if rows else 10
     wheel = []
@@ -90,13 +82,13 @@ def build_color_wheel(columns=160, rows=15, symbol='■'):
             original_space = tuple(map(lambda x: x / 255, (hue, lightness, 255)))
             rgb_space = tuple(map(lambda x: int(x * 255), colorsys.hls_to_rgb(*original_space)))
             color = Color(*rgb_space, truecolor=True)
-            print(color(symbol), end='')
+            print(color(symbol), end="")
             wheel.append(color)
-        print('')
+        print("")
     return wheel
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         cols, rows = os.get_terminal_size()
     except OSError:

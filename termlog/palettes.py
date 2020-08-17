@@ -8,11 +8,11 @@ from .colors import Color
 from .decorations import factory
 from .message import strip_escape
 
-__all__ = ('get_palette', 'set_palette', 'Palette')
-_palettes: Dict[str, 'Palette'] = {}
+__all__ = ("get_palette", "set_palette", "Palette")
+_palettes: Dict[str, "Palette"] = {}
 
 
-@factory(names=['name'], repository=_palettes)
+@factory(names=["name"], repository=_palettes)
 @dataclass
 class Palette:
     """A data structure to capture colors.
@@ -39,7 +39,8 @@ class Palette:
         '\x1b[38;2;185;10;10mhi\x1b[0m'
 
     """
-    name: str = ''
+
+    name: str = ""
     colors: Dict = field(default_factory=dict)
 
     @staticmethod
@@ -61,12 +62,12 @@ class Palette:
         if key in self.colors:
             return self.colors[key]
         else:
-            raise AttributeError(f'Could not find `{key}` in `{self}`')
+            raise AttributeError(f"Could not find `{key}` in `{self}`")
 
 
 @dataclass
 class Default(Palette):
-    name: str = 'default'
+    name: str = "default"
 
     black: Color = field(default=Color(30, 30, 30, term_color=30))
     red: Color = field(default=Color(170, 0, 0, term_color=31))
@@ -99,7 +100,7 @@ class Default(Palette):
 
 @dataclass
 class SolarizedDark(Palette):
-    name: str = 'solarized_dark'
+    name: str = "solarized_dark"
 
     # Standard terminal names
     black: Color = field(default=Color(7, 54, 66, term_color=30))

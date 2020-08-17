@@ -13,12 +13,13 @@ class factory:
         capture_subclasses: also cache subclasses
 
     """
+
     names: List[str] = field(default_factory=list)
     repository: Dict[Any, Any] = field(repr=False, default_factory=dict)
     capture_subclasses: bool = False
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(names={self.names}, count={len(self.repository)})'
+        return f"{self.__class__.__name__}(names={self.names}, count={len(self.repository)})"
 
     def generate_key(self, cls, *args, **kwds):
         cls_key = {}
@@ -32,7 +33,7 @@ class factory:
                 value = getattr(cls, name)
             else:
                 # Guard for programming errors during development
-                raise KeyError(f'Could not find `{name}` in {cls} `__new__` invocation: args={args} kwds={kwds}')
+                raise KeyError(f"Could not find `{name}` in {cls} `__new__` invocation: args={args} kwds={kwds}")
             cls_key[name] = value
         vals = tuple(cls_key.values())
         return vals

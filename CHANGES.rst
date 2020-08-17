@@ -2,6 +2,14 @@
 Changes
 ========
 
+
+1.3.0
+-----
+* Now uses Poetry as a build dependency
+* Upgrades to pyproject.toml
+* Uses Black for style control
+
+
 1.2.1
 -----
 * Drops build field from __metadata__.py

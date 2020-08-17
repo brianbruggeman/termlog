@@ -13,21 +13,19 @@ class TerminalConfig:
         time_format: control how the timestamp appears in the output
 
     """
+
     color: bool = True
     json: bool = False
     timestamp: Optional[bool] = None
-    time_format: str = '%Y%m%d%H%M%S'
+    time_format: str = "%Y%m%d%H%M%S"
 
 
 _terminal_config = TerminalConfig()
 
 
 def set_config(
-        color: Optional[bool] = None,
-        json: Optional[bool] = None,
-        time_format: Optional[str] = None,
-        timestamp: Optional[bool] = None,
-        ) -> TerminalConfig:
+    color: Optional[bool] = None, json: Optional[bool] = None, time_format: Optional[str] = None, timestamp: Optional[bool] = None,
+) -> TerminalConfig:
     """Sets configuration for subsequent termlog API calls.
 
     Note:  Generally, True should only be set for color or json

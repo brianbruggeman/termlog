@@ -21,15 +21,15 @@ class Message:
     json: bool = False
     color: bool = False
     type: Any = str
-    lexer: str = ''
-    time_format: Optional[str] = '%Y%m%d%H%M%S'
+    lexer: str = ""
+    time_format: Optional[str] = "%Y%m%d%H%M%S"
     include_timestamp: bool = True
     fields: Dict = field(default_factory=dict)
 
     def __post_init__(self):
         if self.color is False:
-            self.data = strip_escape(f'{self.data}')
-        self.time_format = '%Y%m%d%H%M%S' if self.time_format is None else self.time_format
+            self.data = strip_escape(f"{self.data}")
+        self.time_format = "%Y%m%d%H%M%S" if self.time_format is None else self.time_format
         self.timestamp = self.timestamp.strftime(self.time_format)
         self._update_fields()
 
@@ -37,20 +37,20 @@ class Message:
     def calling_frame(self):
         found = False
         frame = None
-        stopping_functions = ['echo', 'format', 'red']
+        stopping_functions = ["echo", "format", "red"]
         for frame in inspect.getouterframes(inspect.currentframe()):
             if found:
                 break
-            if 'termlog' in frame.filename and frame.function in stopping_functions:
+            if "termlog" in frame.filename and frame.function in stopping_functions:
                 found = True
         return None if not (frame and found) else frame
 
     @property
     def calling_frame_code(self):
         frame = self.calling_frame
-        code = ''
+        code = ""
         if frame and frame.code_context:
-            code = ''.join(frame.code_context).strip()
+            code = "".join(frame.code_context).strip()
         return code
 
     @property
@@ -59,7 +59,7 @@ class Message:
         frame = self.calling_frame
         if frame:
             members = {k: v for k, v in inspect.getmembers(frame)}
-            key_frame = members['frame']
+            key_frame = members["frame"]
             frame_data.update(key_frame.f_globals)
             frame_data.update(key_frame.f_locals)
         return frame_data
@@ -78,22 +78,22 @@ class Message:
             node = queue.pop(0)
             if isinstance(node, (ast.Expr, ast.FormattedValue, ast.Assign, ast.Starred, ast.Attribute)):
                 queue.append(node.value)
-            elif isinstance(node, (ast.Call, )):
+            elif isinstance(node, (ast.Call,)):
                 # TODO: Find a way to capture the colors here
                 for arg in node.args:
                     queue.append(arg)
-            elif isinstance(node, (ast.JoinedStr, )):
+            elif isinstance(node, (ast.JoinedStr,)):
                 for value in node.values:
                     queue.append(value)
-            elif isinstance(node, (ast.Str, )):
+            elif isinstance(node, (ast.Str,)):
                 data.append(node.s)
-            elif isinstance(node, (ast.Name, )):
+            elif isinstance(node, (ast.Name,)):
                 fields.append(node.id)
-            elif isinstance(node, (ast.BinOp, )):
+            elif isinstance(node, (ast.BinOp,)):
                 queue.append(node.left)
                 queue.append(node.right)
             else:
-                print(node, ', '.join([d for d in dir(node) if not d.startswith('_')]))
+                print(node, ", ".join([d for d in dir(node) if not d.startswith("_")]))
 
             if count > 1000:  # to prevent a runaway
                 break
@@ -103,12 +103,12 @@ class Message:
 
     def __eq__(self, other):
         try:
-            equal = (self.data == other.data)
+            equal = self.data == other.data
         except AttributeError:
-            equal = (self.data == other)
+            equal = self.data == other
         return equal
 
-    def __radd__(self, other) -> 'Message':
+    def __radd__(self, other) -> "Message":
         message = self
         try:
             new_fields = {k: v for k, v in self.fields.items()}
@@ -126,7 +126,7 @@ class Message:
                 time_format=self.time_format,
                 include_timestamp=self.include_timestamp,
                 fields=new_fields,
-                )
+            )
         except (AttributeError, TypeError):
             text = other + str(self.data)
             message = Message(
@@ -138,11 +138,11 @@ class Message:
                 time_format=self.time_format,
                 include_timestamp=self.include_timestamp,
                 fields=self.fields,
-                )
+            )
         finally:
             return message
 
-    def __add__(self, other) -> 'Message':
+    def __add__(self, other) -> "Message":
         try:
             new_fields = {k: v for k, v in self.fields.items()}
             new_fields.update(other.fields)
@@ -155,7 +155,7 @@ class Message:
                 time_format=self.time_format,
                 include_timestamp=self.include_timestamp,
                 fields=new_fields,
-                )
+            )
         except AttributeError:
             return Message(
                 self.data + other,
@@ -166,28 +166,29 @@ class Message:
                 time_format=self.time_format,
                 include_timestamp=self.include_timestamp,
                 fields=self.fields,
-                )
+            )
 
     def __str__(self):
         from .formatting import beautify
+
         data = asdict(self)
         # ts = '' if not self.include_timestamp else f'{self.timestamp.strftime(self.time_format)} '
-        ts = '' if not self.include_timestamp else f'{self.timestamp} '
+        ts = "" if not self.include_timestamp else f"{self.timestamp} "
         if self.json:
-            msg_fields = ['json', 'color', 'lexer', 'type', 'time_format', 'include_timestamp']
+            msg_fields = ["json", "color", "lexer", "type", "time_format", "include_timestamp"]
             for field_name in msg_fields:
                 data.pop(field_name)
-            for field_name, field_value in data.pop('fields', {}).items():
+            for field_name, field_value in data.pop("fields", {}).items():
                 data[field_name] = field_value
             if not self.include_timestamp:
-                data.pop('timestamp')
+                data.pop("timestamp")
             string = json.dumps(data, default=fix_json)
         elif self.lexer and self.color:
             string = beautify(self.data, lexer=self.lexer)
         else:
-            string = f'{self.data}'
+            string = f"{self.data}"
         if self.include_timestamp and not self.json:
-            string = f'{ts}{string}'
+            string = f"{ts}{string}"
         if not self.color:
             string = strip_escape(string)
         return str(string)
@@ -206,13 +207,13 @@ def strip_escape(text: str) -> str:
     # These are all valid escape sequences... they're probably not
     #  inclusive
     sequences = [
-        r'\033',
-        r'\x1b',
-        r'\u001b',
-        ]
-    value_sequence = r'\[[0-9;]+m'
+        r"\033",
+        r"\x1b",
+        r"\u001b",
+    ]
+    value_sequence = r"\[[0-9;]+m"
     for escape_sequence in sequences:
-        pattern = f'{escape_sequence}{value_sequence}'
-        replacement = ''
+        pattern = f"{escape_sequence}{value_sequence}"
+        replacement = ""
         text = re.sub(pattern, replacement, text)
     return text
