@@ -2,6 +2,10 @@
 Changes
 ========
 
+1.3.3
+-----
+* Fixes multi-line and f-string embeds
+
 
 1.3.0
 -----

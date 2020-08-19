@@ -4,6 +4,7 @@ import inspect
 import json
 import re
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 
@@ -34,23 +35,36 @@ class Message:
         self._update_fields()
 
     @property
-    def calling_frame(self):
-        found = False
-        frame = None
-        stopping_functions = ["echo", "format", "red"]
+    def nested_calling_frame_pairs(self):
+        previous = None
+        previous_internal = None
+        package_path = str(Path(__file__).parent)
         for frame in inspect.getouterframes(inspect.currentframe()):
-            if found:
-                break
-            if "termlog" in frame.filename and frame.function in stopping_functions:
-                found = True
-        return None if not (frame and found) else frame
+            if not frame.code_context:
+                continue
+            internal = True if (package_path in frame.filename and not "tests" in frame.filename) else False
+            if internal:
+                previous = frame
+                previous_internal = internal
+                continue
+            if internal is False and previous_internal is True:
+                if previous:
+                    yield frame, previous
+            if internal is True:
+                previous = frame
+            else:
+                previous = None
+            previous_internal = internal
+
+    @property
+    def calling_frame(self):
+        for caller, nested in self.nested_calling_frame_pairs:
+            return caller
 
     @property
     def calling_frame_code(self):
-        frame = self.calling_frame
-        code = ""
-        if frame and frame.code_context:
-            code = "".join(frame.code_context).strip()
+        frame_info = self.calling_frame
+        code = "".join(inspect.getsourcelines(frame_info.frame)[0])
         return code
 
     @property
@@ -76,15 +90,14 @@ class Message:
         while queue:
             count += 1
             node = queue.pop(0)
+            ignored = (ast.ImportFrom, ast.Import, ast.Assert)
             if isinstance(node, (ast.Expr, ast.FormattedValue, ast.Assign, ast.Starred, ast.Attribute)):
                 queue.append(node.value)
             elif isinstance(node, (ast.Call,)):
                 # TODO: Find a way to capture the colors here
-                for arg in node.args:
-                    queue.append(arg)
+                queue.extend(node.args)
             elif isinstance(node, (ast.JoinedStr,)):
-                for value in node.values:
-                    queue.append(value)
+                queue.extend(node.values)
             elif isinstance(node, (ast.Str,)):
                 data.append(node.s)
             elif isinstance(node, (ast.Name,)):
@@ -92,8 +105,12 @@ class Message:
             elif isinstance(node, (ast.BinOp,)):
                 queue.append(node.left)
                 queue.append(node.right)
+            elif isinstance(node, (ast.FunctionDef,)):
+                queue.extend(node.body)
+            elif isinstance(node, ignored):
+                pass
             else:
-                print(node, ", ".join([d for d in dir(node) if not d.startswith("_")]))
+                print("Termlog Warning [Unhandled ast.Node]:", node, ", ".join([d for d in dir(node) if not d.startswith("_")]))
 
             if count > 1000:  # to prevent a runaway
                 break

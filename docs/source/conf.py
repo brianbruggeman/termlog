@@ -58,12 +58,6 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
-    # TODO: Maybe when this is more forgiving
-    #       Currently requires that we do significant updates to
-    #       the spec structure to conform to expectations of fields
-    # 'sphinxcontrib.openapi',
-    "sphinxcontrib.plantuml",
-    "sphinxcontrib.programoutput",
 ]
 
 intersphinx_mapping = {
