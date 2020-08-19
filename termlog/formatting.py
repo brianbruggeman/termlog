@@ -10,14 +10,10 @@ from pygments.lexers import get_lexer_by_name, guess_lexer
 from .config import _terminal_config
 from .message import Message
 
-__all__ = ('beautify', 'format')
+__all__ = ("beautify", "format")
 
 
-def beautify(
-        message: Any,
-        indent: int = 0,
-        lexer: Optional[Union[pygments.lexer.Lexer, str]] = None
-        ) -> str:
+def beautify(message: Any, indent: int = 0, lexer: Optional[Union[pygments.lexer.Lexer, str]] = None) -> str:
     """Beautify *message*.
 
     Args:
@@ -29,20 +25,20 @@ def beautify(
         str: beautified message
 
     """
-    formatter = get_formatter_by_name('16m')
+    formatter = get_formatter_by_name("16m")
 
     indent = max(int(indent or 0), 0)
     if isinstance(message, Path):
         message = str(message)
     elif isinstance(message, bytes):
-        message = message.decode('utf-8')
+        message = message.decode("utf-8")
 
     single = False
     if isinstance(message, str):
-        single = len(message) - len(message.rstrip('\n')) == 0
+        single = len(message) - len(message.rstrip("\n")) == 0
 
     if isinstance(message, Exception):
-        lexer = lexer or 'py3tb'
+        lexer = lexer or "py3tb"
 
     if isinstance(lexer, str):
         lexer = get_lexer_by_name(lexer)
@@ -51,23 +47,24 @@ def beautify(
         lexer = guess_lexer(message, stripall=True) if lexer is None else lexer
 
     if lexer and isinstance(message, str):
-        messages = message.split('\n')
+        messages = message.split("\n")
         for index, message in enumerate(messages):
             message = pygments.highlight(message, lexer, formatter)
-            messages[index] = message.rstrip('\n')
-        message = '\n'.join(messages)
+            messages[index] = message.rstrip("\n")
+        message = "\n".join(messages)
     if indent > 0:
-        message = textwrap.indent(message, ' ' * indent)
-    return message.rstrip('\n') if single and isinstance(message, str) else message
+        message = textwrap.indent(message, " " * indent)
+    return message.rstrip("\n") if single and isinstance(message, str) else message
 
 
-def format(*messages: Any,
-           lexer: Optional[Union[Lexer, str]] = None,
-           color: bool = None,
-           json: bool = None,
-           time_format: Optional[str] = None,
-           add_timestamp: Optional[bool] = None,
-           ) -> str:
+def format(
+    *messages: Any,
+    lexer: Optional[Union[Lexer, str]] = None,
+    color: bool = None,
+    json: bool = None,
+    time_format: Optional[str] = None,
+    add_timestamp: Optional[bool] = None,
+) -> str:
     """Creates *message*, but does not echo it to a stdout, log, or other
 
     lexers can be passed in, and if they are, the resulting output
@@ -91,7 +88,7 @@ def format(*messages: Any,
     color = color if color is not None else _terminal_config.color
 
     # Allows echo to be used in settings and prevents circular dependencies
-    string = ''
+    string = ""
     for index, message in enumerate(messages):
         include_timestamp = False
         if add_timestamp is True:
@@ -103,16 +100,16 @@ def format(*messages: Any,
                 include_timestamp = True
         msg = Message(
             data=message,
-            lexer=str(lexer) if lexer else '',
+            lexer=str(lexer) if lexer else "",
             json=bool(json),
             color=bool(color),
             time_format=time_format,
             include_timestamp=include_timestamp,
-            )
-        separator = ('\n' if json else ' ') if string else ''
+        )
+        separator = ("\n" if json else " ") if string else ""
         try:
-            string = f'{string}{separator}{msg}'
+            string = f"{string}{separator}{msg}"
         except TypeError:
             msg.fields = {}
-            string = f'{string}{separator}{msg}'
+            string = f"{string}{separator}{msg}"
     return string

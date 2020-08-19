@@ -2,6 +2,23 @@
 Changes
 ========
 
+1.3.3
+-----
+* Fixes multi-line and f-string embeds
+
+
+1.3.0
+-----
+* Now uses Poetry as a build dependency
+* Upgrades to pyproject.toml
+* Uses Black for style control
+
+
+1.2.1
+-----
+* Drops build field from __metadata__.py
+
+
 1.2.0
 -----
 * Migrates config to its own file

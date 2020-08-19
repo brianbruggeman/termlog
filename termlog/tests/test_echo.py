@@ -9,7 +9,7 @@ from pygments.lexer import Lexer
 class EchoTestCase:
     messages: List[Any]
     verbose: Optional[Union[bool, int]] = None
-    end: str = '\n'
+    end: str = "\n"
     flush: bool = True
     lexer: Optional[Union[Lexer, str]] = None
     color: Optional[bool] = None
@@ -20,27 +20,30 @@ class EchoTestCase:
     @property
     def echo_kwds(self) -> Dict[str, Any]:
         data = asdict(self)
-        data.pop('expected')
-        data.pop('messages')
+        data.pop("expected")
+        data.pop("messages")
         return data
 
 
-@pytest.mark.parametrize('test_case', [
-    EchoTestCase([''], json=False, color=True),
-    EchoTestCase(['a']),
-    EchoTestCase([1], expected='1'),
-    EchoTestCase([None], expected='None'),
-    ])
+@pytest.mark.parametrize(
+    "test_case",
+    [
+        EchoTestCase([""], json=False, color=True),
+        EchoTestCase(["a"]),
+        EchoTestCase([1], expected="1"),
+        EchoTestCase([None], expected="None"),
+    ],
+)
 def test_echo(test_case, capfd):
     from .. import echo
 
     messages = test_case.messages
-    expected = test_case.expected if test_case.expected is not None else ' '.join(f'{m}' for m in messages)
+    expected = test_case.expected if test_case.expected is not None else " ".join(f"{m}" for m in messages)
 
     result = echo(*messages, **test_case.echo_kwds)
     cap = capfd.readouterr()
     assert result == expected
-    assert cap.err == ''
+    assert cap.err == ""
     # This fails...why?
     # assert cap.out == expected
 

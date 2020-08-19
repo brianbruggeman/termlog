@@ -4,67 +4,37 @@ stages:
 - lint
 - test
 - docs
-- predeploy
+- deploy
 cache:
   pip: true
-  directories:
-  - "$HOME/.cache/isort"
-  - "$HOME/.cache/flake8"
-  - "$HOME/.cache/mypy"
-  - "$HOME/.cache/pre-commit"
 jobs:
   include:
   - stage: lint
-    python: '3.7'
-    install:
-    - pip install --upgrade --force pip
-    - pip install -r requirements/lint.txt
-    - pip install -r requirements.txt
-    - pip install .
+    python: '3.8'
     script:
-    - ls -lashtr
-    - isort -c
-    - flake8
-    - mypy termlog
+    - make lint
   - stage: test
     python:
-    - '3.7'
+    - '3.8'
     - nightly
     matrix:
       allow_failures:
       - python: nightly
-    install:
-    - pip install --upgrade --force pip pytest
-    - pip install -r requirements/test.txt
-    - pip install -r requirements.txt
-    - pip install .
-    - pip install codecov
     script:
-    - coverage erase
-    - pytest --cache-clear -vv -r a --cov --cov-report=term-missing --cov-report=term:skip-covered
-      --cov-fail-under=75
+    - make release
     env:
     - CODECOV_TOKEN="db11eab9-1a10-45bf-aed0-9d51394dc6dd"
     after_success:
     - codecov
   - stage: docs
-    python: '3.7'
+    python: '3.8'
     allow_failures: true
-    install:
-    - pip install --upgrade --force pip
-    - pip install -r requirements/docs.txt
-    - pip install -r requirements.txt
-    - pip install .
     script:
-    - sphinx-build -b html docs/source build/docs
+    - make docs
   - stage: deploy
-    python: '3.7'
-    install:
-    - pip install --upgrade --force pip pytest
-    - python -m pip install --upgrade pip setuptools twine wheel
-    - pip install .[all]
+    python: '3.8'
     script:
-    - python setup.py prerelease
+    - make release
     deploy:
       provider: pypi
       user: __token__

@@ -22,17 +22,17 @@ from .constants import (
     SUFFIX,
     TRUE_COLOR_SUPPORTED,
     TRUEPREFIX,
-    UNDERLINED
+    UNDERLINED,
 )
 from .decorations import factory
 
-__all__ = ('Color', 'rgb')
+__all__ = ("Color", "rgb")
 
 
-_colors: Dict[Tuple[int, int, int], 'Color'] = {}
+_colors: Dict[Tuple[int, int, int], "Color"] = {}
 
 
-@factory(names=['red', 'green', 'blue'], repository=_colors)  # look up color by rgb value
+@factory(names=["red", "green", "blue"], repository=_colors)  # look up color by rgb value
 @dataclass
 class Color:
     """A data structure for packaging up Color display information
@@ -67,15 +67,16 @@ class Color:
         hidden: adds hidden flag
 
     """
+
     red: int = 0
     green: int = 0
     blue: int = 0
     term_color: Optional[int] = None
-    color_prefix: str = ''
-    true_color_prefix: str = f'{TRUEPREFIX}{{red}};{{green}};{{blue}}{SUFFIX}'
-    suffix: str = f'{RESET}'
+    color_prefix: str = ""
+    true_color_prefix: str = f"{TRUEPREFIX}{{red}};{{green}};{{blue}}{SUFFIX}"
+    suffix: str = f"{RESET}"
     truecolor: bool = TRUE_COLOR_SUPPORTED
-    name: str = ''
+    name: str = ""
 
     # style attributes
     dim: bool = False
@@ -90,7 +91,7 @@ class Color:
     strike_through: bool = False
 
     # style attributes combined
-    postfix: str = field(default='', init=False)
+    postfix: str = field(default="", init=False)
 
     def __set_name__(self, owner: Any, name: str):
         setattr(owner, name, self)
@@ -103,7 +104,7 @@ class Color:
         self.blue = max(min(int(self.blue or 0), 255), 0)
 
         if self.term_color is not None and not self.color_prefix:
-            self.color_prefix = f'{PREFIX}{self.term_color}{SUFFIX}'
+            self.color_prefix = f"{PREFIX}{self.term_color}{SUFFIX}"
 
         if self.truecolor is None:
             self.truecolor = TRUE_COLOR_SUPPORTED
@@ -125,21 +126,21 @@ class Color:
             strike_through=self.strike_through,
             hidden=self.hidden,
             inverted=self.inverted,
-            )
+        )
 
     @staticmethod
     def generate_postfix(
-            dim: Optional[bool] = None,
-            bright: Optional[bool] = None,
-            italics: Optional[bool] = None,
-            underlined: Optional[bool] = None,
-            double_underlined: Optional[bool] = None,
-            hidden: Optional[bool] = None,
-            inverted: Optional[bool] = None,
-            strike_through: Optional[bool] = None,
-            blinking: Optional[bool] = None,
-            strobing: Optional[bool] = None,
-            ) -> str:
+        dim: Optional[bool] = None,
+        bright: Optional[bool] = None,
+        italics: Optional[bool] = None,
+        underlined: Optional[bool] = None,
+        double_underlined: Optional[bool] = None,
+        hidden: Optional[bool] = None,
+        inverted: Optional[bool] = None,
+        strike_through: Optional[bool] = None,
+        blinking: Optional[bool] = None,
+        strobing: Optional[bool] = None,
+    ) -> str:
         """Creates a prefix given the constraints above
 
         Notes:
@@ -170,7 +171,7 @@ class Color:
             message with escape sequences for terminal colors
 
         """
-        postfix = ''
+        postfix = ""
         # ignore all of the other flags if hidden
         if hidden:
             postfix += HIDDEN
@@ -214,34 +215,34 @@ class Color:
 
         """
         colored_message = message
-        prefix = ''
+        prefix = ""
         if color is not False and (truecolor is True or (truecolor is None and self.truecolor)):
             prefix = self.true_color_prefix + self.postfix
         elif color:
             prefix = self.color_prefix + self.postfix
         if prefix:
-            colored_message = f'{prefix}{message}{self.suffix}'
+            colored_message = f"{prefix}{message}{self.suffix}"
         return colored_message
 
     def __eq__(self, other):
         return id(self) == id(other)
 
     def __getitem__(self, item):
-        if item in ('red', 'green', 'blue'):
+        if item in ("red", "green", "blue"):
             return getattr(self, item)
         else:
-            raise KeyError(f'Could not find {item} in {self}')
+            raise KeyError(f"Could not find {item} in {self}")
 
     @staticmethod
     def keys():
-        return ('red', 'green', 'blue')
+        return ("red", "green", "blue")
 
     @staticmethod
     def __len__():
         return 3
 
     def __iter__(self):
-        for name in ('red', 'green', 'blue'):
+        for name in ("red", "green", "blue"):
             yield getattr(self, name)
 
 
