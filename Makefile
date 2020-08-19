@@ -59,8 +59,8 @@ $(ACTIVATE):
 $(POETRY): | $(ACTIVATE)
 	@echo "Setting up venv with required packages"
 	$(PYTHON) -m pip install --upgrade -q pip poetry
-	. $(ACTIVATE) && $(POETRY) env use $(VENV_BIN_PATH)/python
 	. $(ACTIVATE) && $(POETRY) config virtualenvs.create false
+	. $(ACTIVATE) && $(POETRY) env use $(VENV_BIN_PATH)/python
 
 $(ISORT): | $(ACTIVATE) $(POETRY)
 	$(POETRY) run pip install isort
