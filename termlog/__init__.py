@@ -6,7 +6,7 @@ from .formatting import beautify, format
 from .palettes import Palette, get_palette, set_palette
 from .terminal import echo, set_config
 
-__version__ = "1.3.3"
+__version__ = "1.3.4"
 
 
 def __getattr__(name: str) -> Any:
