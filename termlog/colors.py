@@ -44,27 +44,28 @@ class Color:
         >>> msg = ...
         >>> echo(f'{solarized_red("ERROR")}: {solarized_magenta(msg)}')
 
-    Attributes:
-        red: the value for the red aspect of the color [0-255]
-        green: the value for the green aspect of the color [0-255]
-        blue: the value for the blue aspect of the color [0-255]
-        color_prefix: the string prefix when true-color is not enabled
-        true_color_prefix: the string prefix for when true-color is enabled
-        suffix: the reset suffix
-        truecolor: forces output to use truecolor
-        prefix: calculated prefix based on flags
+    Data:
+        * ``red``: the value for the red aspect of the color [0-255]
+        * ``green``: the value for the green aspect of the color [0-255]
+        * ``blue``: the value for the blue aspect of the color [0-255]
+        * ``color_prefix``: the string prefix when true-color is not enabled
+        * ``true_color_prefix``: the string prefix for when true-color is enabled
+        * ``suffix``: the reset suffix
+        * ``truecolor``: forces output to use truecolor
+        * ``prefix``: calculated prefix based on flags
 
-    Flags:
-        bright: adds bold/bright flag
-        dim: adds dim flag
-        italics: adds italics flag
-        underlined: adds underlined flag
-        double_underlined: adds double underlined flag
-        strobing: adds strobing flag
-        blinking: adds blinking flag
-        inverted: flag that inverts foreground and background colors
-        strike_through: adds strike-through flag
-        hidden: adds hidden flag
+    Style:
+        * bright: adds bold/bright flag
+        * dim: adds dim flag
+        * italics: adds italics flag
+        * underlined: adds underlined flag
+        * double_underlined: adds double underlined flag
+        * strobing: adds strobing flag
+        * blinking: adds blinking flag
+        * inverted: flag that inverts foreground and background colors
+        * strike_through: adds strike-through flag
+        * hidden: adds hidden flag
+
 
     """
 

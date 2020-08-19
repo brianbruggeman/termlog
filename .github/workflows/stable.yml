@@ -1,0 +1,150 @@
+name: Latest Stable
+
+on:
+  push:
+    branch: -stable
+
+jobs:
+  setup:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - 3.8
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-python-modules
+        with:
+          # cache files are stored in `~/.cache` on Linux/macOS
+          path: ~/.cache/virtualenvs/termlog
+          key: ${{ runner.os }}-poetry-${{ env.cache-name }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-${{ env.cache-name }}-
+            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-
+
+      - name: Prepare environment
+        run: echo ::set-env name=HOME::$HOME
+
+      - name: Install dependencies
+        run: make install
+        env:
+          WORKON_HOME: ${{ env.HOME }}/.cache/virtualenvs
+
+  static-analysis:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - 3.8
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-python-modules
+        with:
+          # cache files are stored in `~/.cache` on Linux/macOS
+          path: ~/.cache/virtualenvs/termlog
+          key: ${{ runner.os }}-poetry-${{ env.cache-name }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-${{ env.cache-name }}-
+            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-
+
+      - name: Prepare environment
+        run: echo ::set-env name=HOME::$HOME
+
+      - name: Check with mypy
+        run: make lint
+        env:
+          WORKON_HOME: ${{ env.HOME }}/.cache/virtualenvs
+
+  style:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+        - 3.8
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-python-modules
+        with:
+          # cache files are stored in `~/.cache` on Linux/macOS
+          path: ~/.cache/virtualenvs/termlog
+          key: ${{ runner.os }}-poetry-${{ env.cache-name }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-${{ env.cache-name }}-
+            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-
+
+      - name: Prepare environment
+        run: echo ::set-env name=HOME::$HOME
+
+      - name: Check style
+        run: make style
+        env:
+          WORKON_HOME: ${{ env.HOME }}/.cache/virtualenvs
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+        - 3.8
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-python-modules
+        with:
+          # cache files are stored in `~/.cache` on Linux/macOS
+          path: ~/.cache/virtualenvs/termlog
+          key: ${{ runner.os }}-poetry-${{ env.cache-name }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-${{ env.cache-name }}-
+            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-
+
+      - name: Prepare environment
+        run: echo ::set-env name=HOME::$HOME
+
+      - name: Test with pytest
+        run: make release
+        env:
+          WORKON_HOME: ${{ env.HOME }}/.cache/virtualenvs
