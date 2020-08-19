@@ -11,7 +11,7 @@ Termlog
 .. image:: https://badge.fury.io/py/termlog.svg
     :target: https://pypi.python.org/pypi/termlog
 
-.. image:: https://github.com/brianbruggeman/termlog/workflows/Validate%20Package%20on%20Commit/badge.svg
+.. image:: https://github.com/brianbruggeman/termlog/workflows/Latest%20Stable/badge.svg
     :target: https://github.com/brianbruggeman/termlog/actions
 
 .. image:: https://codecov.io/gh/brianbruggeman/termlog/branch/develop/graph/badge.svg?token=y6xPnPtcdc
