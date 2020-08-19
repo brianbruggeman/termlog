@@ -2,8 +2,7 @@ name: Latest Stable
 
 on:
   push:
-    branch:
-      stable
+    branch: -stable
 
 jobs:
   setup:
