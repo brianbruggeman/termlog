@@ -2,7 +2,7 @@ name: Latest Unstable
 
 on:
   push:
-    branches: !stable
+    branches: !-stable
 
 jobs:
   setup:
