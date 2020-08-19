@@ -11,11 +11,11 @@ Termlog
 .. image:: https://badge.fury.io/py/termlog.svg
     :target: https://pypi.python.org/pypi/termlog
 
-.. image:: https://travis-ci.org/brianbruggeman/termlog.svg
-    :target: https://travis-ci.org/brianbruggeman/termlog
+.. image:: https://github.com/brianbruggeman/termlog/workflows/Validate%20Package%20on%20Commit/badge.svg
+    :target: https://github.com/brianbruggeman/termlog/workflows/Validate%20Package%20on%20Commit/badge.svg
 
 .. image:: https://codecov.io/gh/brianbruggeman/termlog/branch/develop/graph/badge.svg?token=y6xPnPtcdc
-  :target: https://codecov.io/gh/brianbruggeman/termlog
+    :target: https://codecov.io/gh/brianbruggeman/termlog
 
 
 Termlog: A terminal logging library for logging data both as lexed text or json
