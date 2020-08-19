@@ -12,7 +12,7 @@ Termlog
     :target: https://pypi.python.org/pypi/termlog
 
 .. image:: https://github.com/brianbruggeman/termlog/workflows/Validate%20Package%20on%20Commit/badge.svg
-    :target: https://github.com/brianbruggeman/termlog/workflows/Validate%20Package%20on%20Commit/badge.svg
+    :target: https://github.com/brianbruggeman/termlog/actions
 
 .. image:: https://codecov.io/gh/brianbruggeman/termlog/branch/develop/graph/badge.svg?token=y6xPnPtcdc
     :target: https://codecov.io/gh/brianbruggeman/termlog

@@ -27,7 +27,7 @@ POSTGRES_VERSION ?= 11.5
 HASH := $(shell git rev-parse --short HEAD 2>/dev/null)
 BRANCH := $(shell git branch | grep \* | cut -d ' ' -f2)
 
-SYSTEM_PYTHON := python
+SYSTEM_PYTHON := python3
 
 VENV_BIN_PATH := $(VENV_PATH)/bin
 PIP := $(VENV_BIN_PATH)/poetry
