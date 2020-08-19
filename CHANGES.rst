@@ -3,7 +3,7 @@ Changes
 ========
 
 
-Next
+1.3.4
 -----
 * Updates CI/CD process
 * Adds Github Actions
