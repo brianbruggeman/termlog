@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Optional
 
 
@@ -16,8 +16,16 @@ class TerminalConfig:
 
     color: bool = True
     json: bool = False
-    timestamp: Optional[bool] = None
     time_format: str = "%Y%m%d%H%M%S"
+    timestamp: Optional[bool] = None
+
+    def __getitem__(self, item):
+        data = asdict(self)
+        return data[item]
+
+    def keys(self):
+        data = asdict(self)
+        return data.keys()
 
 
 _terminal_config = TerminalConfig()
@@ -41,8 +49,12 @@ def set_config(
 
     """
     global _terminal_config
-    _terminal_config.color = color if color is not None else _terminal_config.color
-    _terminal_config.json = json if json is not None else _terminal_config.json
-    _terminal_config.timestamp = timestamp if timestamp is not None else _terminal_config.timestamp
-    _terminal_config.time_format = time_format if time_format is not None else _terminal_config.time_format
+    if color is not None:
+        _terminal_config.color = color
+    if json is not None:
+        _terminal_config.json = json
+    if time_format is not None:
+        _terminal_config.time_format = time_format
+    if timestamp is not None:
+        _terminal_config.timestamp = timestamp
     return _terminal_config

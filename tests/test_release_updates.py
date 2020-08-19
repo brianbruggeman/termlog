@@ -9,6 +9,7 @@ import toml
 
 repo_path = Path(__file__).parent.parent
 
+
 def test_version_in_changes():
     """Validates that some release notes have been added to
     CHANGES.rst

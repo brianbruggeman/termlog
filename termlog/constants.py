@@ -1,8 +1,9 @@
 import os
+from typing import Dict, Optional
 
 
 # This will get updated below, see: _true_color_supported
-def true_color_supported() -> bool:
+def true_color_supported(env: Optional[Dict[str, str]] = None) -> bool:
     """Check if truecolor is supported by the current tty.
 
     Note: this currently only checks to see if COLORTERM contains
@@ -11,7 +12,9 @@ def true_color_supported() -> bool:
              - 24bit
 
     """
-    color_term = os.getenv("COLORTERM", "")
+    if env is None:
+        env = {k: v for k, v in os.environ.items()}
+    color_term = env.get("COLORTERM", "")
     return True if any(check in color_term for check in ["truecolor", "24bit"]) else False
 
 
