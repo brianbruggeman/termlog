@@ -1,4 +1,4 @@
-name: Latest Stable Test Run
+name: Latest Stable
 
 on:
   push:

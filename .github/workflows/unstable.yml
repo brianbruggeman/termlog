@@ -1,4 +1,4 @@
-name: Validate Package on Commit
+name: Latest Unstable
 
 on:
   push:
