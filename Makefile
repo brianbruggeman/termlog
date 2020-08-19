@@ -23,11 +23,11 @@ CURRENT_DIR ?=$(shell env | grep -i PWD | cut -d'=' -f2 )
 GIT_SHA := $(git rev-parse --short HEAD)
 BUILD_DATE := $(date +'%Y%m%d')
 
-POSTGRES_VERSION ?= 11.5
+PYTHON_VERSION ?= 3.8
 HASH := $(shell git rev-parse --short HEAD 2>/dev/null)
 BRANCH := $(shell git branch | grep \* | cut -d ' ' -f2)
 
-SYSTEM_PYTHON := python3
+SYSTEM_PYTHON := $(shell which python$(PYTHON_VERSION))
 
 VENV_BIN_PATH := $(VENV_PATH)/bin
 PIP := $(VENV_BIN_PATH)/poetry
@@ -39,6 +39,7 @@ MYPY := $(VENV_BIN_PATH)/mypy
 ISORT := $(VENV_BIN_PATH)/isort
 BLACK := $(VENV_BIN_PATH)/black
 SPHINX_BUILD := $(VENV_BIN_PATH)/sphinx-build
+EGG_LINK := $(VENV_PATH)/lib/python$(PYTHON_VERSION)/site-packages/$(PROJECT_NAME).egg-link
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 PACKAGE_VERSION := $(shell cat $(CURRENT_DIR)/pyproject.toml | grep -i "version = \"" | cut -d "\"" -f 2)
@@ -60,7 +61,9 @@ $(POETRY): | $(ACTIVATE)
 	@echo "Setting up venv with required packages"
 	$(PYTHON) -m pip install --upgrade -q pip poetry
 	. $(ACTIVATE) && $(POETRY) config virtualenvs.create false
-	. $(ACTIVATE) && $(POETRY) env use $(VENV_BIN_PATH)/python
+	. $(ACTIVATE) && $(POETRY) config virtualenvs.in-project false
+	. $(ACTIVATE) && $(POETRY) config virtualenvs.path $(WORKON_HOME)
+	. $(ACTIVATE) && $(POETRY) config cache-dir $(WORKON_HOME)
 
 $(ISORT): | $(ACTIVATE) $(POETRY)
 	$(POETRY) run pip install isort
@@ -78,12 +81,15 @@ $(MYPY): | $(ACTIVATE) $(POETRY)
 $(SPHINX_BUILD): | $(ACTIVATE) $(POETRY)
 	$(POETRY) run pip install sphinx
 
+$(EGG_LINK): | $(ACTIVATE) $(POETRY)
+	$(POETRY) install
+
 venv-path: | $(ACTIVATE) $(POETRY)
+package-path: | $(EGG_LINK)
 
 venv: venv-path
 
-install: venv
-	$(POETRY) install
+install: venv $(EGG_LINK)
 
 clean-venv:
 	rm -Rf $(VENV_PATH)
@@ -121,5 +127,12 @@ publish: $(ACTIVATE) $(POETRY) clean-build install info release  ## Create and p
 	$(POETRY) publish
 
 info: $(ACTIVATE) install printvars ## Show configuration information
-	$(ACTIVATE) && python --version
-	$(ACTIVATE) && pip --version
+	. $(ACTIVATE) && python --version
+	. $(ACTIVATE) && pip --version
+	$(POETRY) env info
+
+update: $(POETRY)
+	$(POETRY) update
+
+shell: $(POETRY)
+	$(POETRY) shell

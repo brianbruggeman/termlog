@@ -16,9 +16,7 @@ colors
 
 .. automodule:: termlog.colors
    :members:
-   :undoc-members:
-   :show-inheritance:
-
+   :exclude-members: red green blue color_prefix true_color_prefix suffix truecolor prefix bright dim italics underlined double_underlined strobing blinking inverted strike_through hidden
 
 formatting
 ----------
