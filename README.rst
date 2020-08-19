@@ -14,7 +14,7 @@ Termlog
 .. image:: https://github.com/brianbruggeman/termlog/workflows/Latest%20Stable/badge.svg
     :target: https://github.com/brianbruggeman/termlog/actions
 
-.. image:: https://codecov.io/gh/brianbruggeman/termlog/branch/develop/graph/badge.svg?token=y6xPnPtcdc
+.. image:: https://codecov.io/gh/brianbruggeman/termlog/branch/stable/graph/badge.svg?token=y6xPnPtcdc
     :target: https://codecov.io/gh/brianbruggeman/termlog
 
 
