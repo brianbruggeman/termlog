@@ -2,6 +2,11 @@
 Changes
 ========
 
+Next
+-----
+* Codecov badge updated
+* Beefs up AST handler
+
 
 1.3.4
 -----

@@ -1,4 +1,3 @@
-import ast
 import datetime
 import inspect
 import json
@@ -6,6 +5,8 @@ import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+from .interpret import extract_fields
 
 
 def fix_json(obj):
@@ -81,42 +82,11 @@ class Message:
     def _update_fields(self):
         frame_data = self.calling_frame_data
         code = self.calling_frame_code
-        parsed = ast.parse(code)
-        queue = parsed.body
-        data = []
-        fields = []
-        # Grab field names to get data needed for message
-        count = -1
-        while queue:
-            count += 1
-            node = queue.pop(0)
-            ignored = (ast.ImportFrom, ast.Import, ast.Assert)
-            if isinstance(node, (ast.Expr, ast.FormattedValue, ast.Assign, ast.Starred, ast.Attribute)):
-                queue.append(node.value)
-            elif isinstance(node, (ast.Call,)):
-                # TODO: Find a way to capture the colors here
-                queue.extend(node.args)
-            elif isinstance(node, (ast.JoinedStr,)):
-                queue.extend(node.values)
-            elif isinstance(node, (ast.Str,)):
-                data.append(node.s)
-            elif isinstance(node, (ast.Name,)):
-                fields.append(node.id)
-            elif isinstance(node, (ast.BinOp,)):
-                queue.append(node.left)
-                queue.append(node.right)
-            elif isinstance(node, (ast.FunctionDef,)):
-                queue.extend(node.body)
-            elif isinstance(node, ignored):
-                pass
-            else:
-                print("Termlog Warning [Unhandled ast.Node]:", node, ", ".join([d for d in dir(node) if not d.startswith("_")]))
-
-            if count > 1000:  # to prevent a runaway
-                break
+        fields = extract_fields(code)
         for name in fields:
             if name in frame_data:
-                self.fields[name] = frame_data[name]
+                fields[name] = frame_data[name]
+        self.fields.update(fields)
 
     def __eq__(self, other):
         try:
