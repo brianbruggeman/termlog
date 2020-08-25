@@ -2,7 +2,7 @@
 Changes
 ========
 
-Next
+1.3.5
 -----
 * Codecov badge updated
 * Beefs up AST handler
