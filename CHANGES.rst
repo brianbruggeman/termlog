@@ -2,6 +2,10 @@
 Changes
 ========
 
+1.4.0
+-----
+* Refactored field extraction logic to be more generic and inclusive
+
 1.3.5
 -----
 * Codecov badge updated

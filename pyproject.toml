@@ -1,8 +1,12 @@
+[build-system]
+requires = ["poetry-core>=1.0.0", "setuptools", "wheel"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "termlog"
-version = "1.3.5"
+version = "1.4.0"
 description = "A Terminal logging library"
-authors = ["Brian Bruggeman <Brian.M.Bruggeman@gmail.com>"]
+authors = ["Brian Bruggeman <1350114+brianbruggeman@users.noreply.github.com>"]
 license = "MIT"
 
 # New attributes
@@ -77,6 +81,7 @@ omit = [
 ]
 source = ["termlog", "tests"]
 
+
 [tool.coverage.html]
 directory = "docs/_build/html/"
 
@@ -89,6 +94,7 @@ exclude_lines = [
     "def __dir__",
     "if __name__ == __main__.:",
 ]
+
 
 [tool.black]
 line-length = 140
@@ -162,7 +168,3 @@ norecursedirs = [
     ".pytest_cache",
 
 ]
-
-[build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"

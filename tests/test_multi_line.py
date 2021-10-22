@@ -22,4 +22,5 @@ def test_multiline_call():
     )
     assert output == {
         "data": f"A super, duper, really, fantastically, long, colorful message so that black won't refactor this into one line!",
+        "output": None,
     }

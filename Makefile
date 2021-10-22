@@ -3,16 +3,34 @@
 # Define help targets with descriptions provided in `##` comments
 #
 # =====================================================================================================
-.PHONY: help printvars
+.DEFAULT_GOAL := all
 
-help: ## Show this help
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+mkfile_dir := $(dir $(mkfile_path))
+OSUPPER = $(shell uname -s 2>/dev/null | tr [:lower:] [:upper:])
+DARWIN = $(strip $(findstring DARWIN, $(OSUPPER)))
+VARS_OLD := $(.VARIABLES)
+PWD := $(shell printenv | grep PWD | cut -d= -f2)
+SHELL1 := $(shell ps $$$$ | tail -n 1 | awk '{print $$5}')
+SHELL2 := $(shell echo $$SHELL)
+ifeq ($(SHELL2),)
+ifeq ($(SHELL1),/bin/sh)
+USER_SHELL ?= /bin/bash
+else
+USER_SHELL ?= $(SHELL1)
+endif
+else
+USER_SHELL ?= $(SHELL2)
+endif
 
-printvars:
-	@env | sort
-	@$(foreach V,$(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(warning $V=$($V) ($(value $V)))))
-
-.DEFAULT_GOAL := help
+# ----------------------------------------------------------------------
+# Dotenv load
+DOTENV_FILE ?= ./.env
+ENV_FILE ?= $(DOTENV_FILE)
+ifneq (,$(wildcard $(ENV_FILE)))
+	include $(ENV_FILE)
+	export $(shell grep -v '^\s*\#.*' $(ENV_FILE) | grep -v '^\s*$$' | sed 's/=.*//' | sed 's/^\s*export//' )
+endif
 
 WORKON_HOME ?= $(HOME)/.virtualenvs
 PROJECT_NAME ?= termlog
@@ -24,25 +42,30 @@ GIT_SHA := $(git rev-parse --short HEAD)
 BUILD_DATE := $(date +'%Y%m%d')
 
 PYTHON_VERSION ?= 3.8
-HASH := $(shell git rev-parse --short HEAD 2>/dev/null)
-BRANCH := $(shell git branch | grep \* | cut -d ' ' -f2)
+HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "")
+BRANCH := $(shell git branch | grep \* | cut -d ' ' -f2 || echo "")
 
-SYSTEM_PYTHON := $(shell which python$(PYTHON_VERSION))
+SYSTEM_PYTHON ?= $(shell which python$(PYTHON_VERSION))
 
 VENV_BIN_PATH := $(VENV_PATH)/bin
-PIP := $(VENV_BIN_PATH)/poetry
-POETRY := $(VENV_BIN_PATH)/poetry
 ACTIVATE := $(VENV_BIN_PATH)/activate
-PYTHON := $(VENV_BIN_PATH)/python
-PYTEST := $(VENV_BIN_PATH)/pytest
-MYPY := $(VENV_BIN_PATH)/mypy
-ISORT := $(VENV_BIN_PATH)/isort
 BLACK := $(VENV_BIN_PATH)/black
+ISORT := $(VENV_BIN_PATH)/isort
+MYPY := $(VENV_BIN_PATH)/mypy
+PIP := $(VENV_BIN_PATH)/pip
+POETRY := $(VENV_BIN_PATH)/poetry
+PYTEST := $(VENV_BIN_PATH)/pytest
+PYTHON := $(VENV_BIN_PATH)/python
 SPHINX_BUILD := $(VENV_BIN_PATH)/sphinx-build
-EGG_LINK := $(VENV_PATH)/lib/python$(PYTHON_VERSION)/site-packages/$(PROJECT_NAME).egg-link
-ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-PACKAGE_VERSION := $(shell cat $(CURRENT_DIR)/pyproject.toml | grep -i "version = \"" | cut -d "\"" -f 2)
+ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+DEFAULT_PKG_VERSION ?= $(shell cat pyproject.toml | grep -i "^version = " | cut -d\' -f2 | cut -d' ' -f3 | sed "s/'//g" | sed 's/"//g')
+ifneq "" "$(BITBUCKET_TAG)"
+PKG_VERSION ?= $(BITBUCKET_TAG)
+else
+PKG_VERSION ?= $(DEFAULT_PKG_VERSION)
+endif
+
 
 # =====================================================================================================
 #
@@ -52,6 +75,74 @@ PACKAGE_VERSION := $(shell cat $(CURRENT_DIR)/pyproject.toml | grep -i "version 
 # additional details.
 #
 # =====================================================================================================
+all:: fmt test
+
+clean:: ## Clean build artifacts
+	rm -Rf build dist .mypy_cache .pytest_cache *.egg-info .venv $(VENV_PATH)
+
+docs:: | $(SPHINX_BUILD) ## Build documentation
+	$(SPHINX_BUILD) -b html docs/source build/docs
+
+fmt:: | $(VENV_PATH) $(POETRY) $(ISORT) $(BLACK)
+	$(BLACK) .
+	$(ISORT) .
+
+help: ## Show this help
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+lint:: | $(MYPY) ## Run lint checking
+	$(MYPY) .
+
+info:: | $(ACTIVATE) printvars ## Show configuration information
+	. $(ACTIVATE) && python --version
+	. $(ACTIVATE) && pip --version
+	$(POETRY) env info
+
+install:: | $(POETRY)
+	$(POETRY) install
+
+printvars:
+	@$(foreach V,$(sort $(.VARIABLES)), $(if $(filter-out environment% default automatic, $(origin $V)),$(warning $V=$($V) ($(value $V)))))
+	@env | sort
+
+publish: $(ACTIVATE) $(POETRY) clean venv-build install info release  ## Create and publish release
+	$(POETRY) publish -r pypi-test --build
+	$(POETRY) publish
+
+release: install  ## Validate for release
+	$(PYTEST) -ra --isort --black --mypy -vv --cache-clear --cov=$(PROJECT_NAME) --cov-report=term-missing --cov-report=term:skip-covered --cov-fail-under=80
+
+style:: | $(BLACK) $(ISORT)  ## Run style checking
+	$(BLACK) . --check
+	$(ISORT) . --check
+
+test:: install ## Run tests (fast)
+	$(PYTEST) -ra -vv
+
+update: $(POETRY)
+	$(POETRY) update
+
+venv:: | $(VENV_PYTHON)  ## Shells into virtual environment
+	@echo "Activating virtualenv under '$(VENV_PATH)' using shell '$(USER_SHELL)':" && $(USER_SHELL) --login -c ". $(VENV_PATH)/bin/activate && $(USER_SHELL) -i"
+	@echo "Exited virtualenv"
+
+venv-build:: | $(POETRY)
+
+venv-clean::
+	rm -Rf $(VENV_PATH)
+
+venv-rebuild:: venv-clean venv-build
+
+# ----------------------------------------------------------------------
+requirements.txt: | $(POETRY)  ## Generate requirements.txt
+	$(POETRY) export -f requirements.txt --output requirements.txt
+
+requirements-dev.txt: | $(POETRY)  ## Generate requirements.txt
+	$(POETRY) export --dev -f requirements.txt --output requirements-dev.txt
+
+setup.py: | $(POETRY)  ## Creates a setup.py for local development
+	$(POETRY) build -f sdist
+	tar xvzf dist/termlog-$(DEFAULT_PKG_VERSION).tar.gz --strip-components=1 -C . termlog-$(DEFAULT_PKG_VERSION)/setup.py
 
 $(ACTIVATE):
 	@echo "Creating venv under ${VENV_PATH}"
@@ -66,73 +157,16 @@ $(POETRY): | $(ACTIVATE)
 	. $(ACTIVATE) && $(POETRY) config cache-dir $(WORKON_HOME)
 
 $(ISORT): | $(ACTIVATE) $(POETRY)
-	$(POETRY) run pip install isort
+	. $(ACTIVATE) && $(POETRY) install
 
 $(BLACK): | $(ACTIVATE) $(POETRY)
-	$(POETRY) env info
-	$(POETRY) run pip install black
+	. $(ACTIVATE) && $(POETRY) install
 
 $(PYTEST): | $(ACTIVATE) $(POETRY)
-	$(POETRY) run pip install pytest
+	. $(ACTIVATE) && $(POETRY) install
 
 $(MYPY): | $(ACTIVATE) $(POETRY)
-	$(POETRY) run pip install mypy
+	. $(ACTIVATE) && $(POETRY) install
 
 $(SPHINX_BUILD): | $(ACTIVATE) $(POETRY)
-	$(POETRY) run pip install sphinx
-
-$(EGG_LINK): | $(ACTIVATE) $(POETRY)
-	$(POETRY) install
-
-venv-path: | $(ACTIVATE) $(POETRY)
-package-path: | $(EGG_LINK)
-
-venv: venv-path
-
-install: venv $(EGG_LINK)
-
-clean-venv:
-	rm -Rf $(VENV_PATH)
-
-clean-dev:
-	rm -Rf .mypy_cache .pytest_cache *.egg-info .venv
-
-clean-build:
-	rm -Rf build dist
-
-clean: clean-venv clean-build clean-dev
-
-docs: $(SPHINX_BUILD) install ## Build documentation
-	$(SPHINX_BUILD) -b html docs/source build/docs
-
-lint: $(MYPY) ## Run lint checking
-	$(MYPY) .
-
-black: $(BLACK) ## Run black formatting
-	$(BLACK) . --check
-
-isort: $(ISORT) ## Run isort formatting
-	$(ISORT) . --check
-
-style: install black isort  ## Run style checking
-
-test: install ## Run tests (fast)
-	$(PYTEST) -ra -vv
-
-release: install  ## Validate for release
-	$(PYTEST) -ra --isort --black --mypy -vv --cache-clear --cov=$(PROJECT_NAME) --cov-report=term-missing --cov-report=term:skip-covered --cov-fail-under=80
-
-publish: $(ACTIVATE) $(POETRY) clean-build install info release  ## Create and publish release
-	$(POETRY) publish -r pypi-test --build
-	$(POETRY) publish
-
-info: $(ACTIVATE) install printvars ## Show configuration information
-	. $(ACTIVATE) && python --version
-	. $(ACTIVATE) && pip --version
-	$(POETRY) env info
-
-update: $(POETRY)
-	$(POETRY) update
-
-shell: $(POETRY)
-	$(POETRY) shell
+	. $(ACTIVATE) && $(POETRY) install

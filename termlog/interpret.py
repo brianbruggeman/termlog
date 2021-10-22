@@ -1,7 +1,16 @@
 """Interprets each AST node"""
 import ast
+import sys
 import textwrap
+from dataclasses import dataclass, field
 from typing import Any, Dict, List
+
+
+@dataclass
+class ExtractableFields:
+    queue_append: List[str] = field(default_factory=list)
+    queue_extend: List[str] = field(default_factory=list)
+    field_update: List[str] = field(default_factory=list)
 
 
 def extract_fields(code: str) -> Dict[str, Any]:
@@ -14,65 +23,58 @@ def extract_fields(code: str) -> Dict[str, Any]:
     code = textwrap.dedent(code)
     parsed = ast.parse(code)
     queue: List[Any] = parsed.body
-    data = []
     fields: Dict[str, Any] = {}
     # Grab field names to get data needed for message
     count = -1
     while queue:
         count += 1
         node = queue.pop(0)
-        ignored = tuple([ast.ImportFrom, ast.Import, ast.Assert, ast.Raise])
-        unhandled = tuple(
-            [
-                ast.Constant,
-                ast.Dict,
-                ast.DictComp,
-                ast.Expr,
-                ast.GeneratorExp,
-                ast.For,
-                ast.List,
-                ast.ListComp,
-                ast.Return,
-                ast.Subscript,
-                ast.Try,
-                ast.With,
-            ]
+        ignored = tuple([ast.Constant, ast.FormattedValue])
+        node_data = (
+            ", ".join(f"{key}={getattr(node, key)}" for key in node._fields)
+            if hasattr(node, "_fields")
+            else ", ".join(d for d in dir(node) if not d.startswith("_"))
         )
-        if isinstance(node, (list, tuple)):
-            queue.extend(node)
-        elif isinstance(node, (ast.Expr, ast.FormattedValue, ast.Assign, ast.Starred, ast.Attribute, ast.Subscript, ast.AnnAssign)):
-            queue.append(node.value)
-        elif isinstance(node, (ast.Call,)):
-            queue.extend(node.args)
-        elif isinstance(node, (ast.JoinedStr, ast.BoolOp)):
-            queue.extend(node.values)
-        elif isinstance(node, (ast.Str,)):
-            data.append(node.s)
-        elif isinstance(node, (ast.Name,)):
-            fields.update({node.id: None})
-        elif isinstance(node, (ast.BinOp,)):
-            queue.append(node.left)
-            queue.append(node.right)
-        elif isinstance(node, (ast.FunctionDef,)):
-            queue.extend(node.body)
-        elif isinstance(node, (ast.If, ast.IfExp)):
-            queue.append(node.body)
-            queue.append(node.orelse)
-        # elif isinstance(node, (ast.DictComp,)):
-        #     queue.extend(node.generators)
-        #     queue.append(node.key)
-        #     queue.append(node.value)
-        # elif isinstance(node, (ast.Try,)):
-        #     queue.extend(node.body)
-        #     queue.extend(node.orelse)
-        #     queue.extend(node.finalbody)
-        elif isinstance(node, ignored):
+        ast_mapping = {
+            ast.alias: "asname",
+            ast.arg: "arg",
+            ast.ExceptHandler: "name",
+            ast.Name: "id",
+        }
+        if not (hasattr(node, "__module__") and node.__module__ == "_ast"):
+            continue
+        if isinstance(node, (ast.Name,)) and not isinstance(node.ctx, ast.Store):
+            continue
+        if isinstance(node, ignored):
             pass
-        elif isinstance(node, unhandled):
-            # print("Termlog Warning [Debug ast.Node]:", node, ", ".join([d for d in dir(node) if not d.startswith("_")]))
-            pass
+        elif isinstance(node, tuple(ast_mapping.keys())):
+            field_name = ast_mapping[type(node)]
+            field_value = getattr(node, field_name)
+            if field_value:
+                fields.update({field_value: None})
+        elif hasattr(node, "_fields"):
+            for field_name in node._fields:
+                field_value = getattr(node, field_name)
+                if hasattr(field_value, "__module__") and field_value.__module__ == "_ast":
+                    queue.append(field_value)
+                elif isinstance(field_value, (list, tuple)):
+                    queue.extend(field_value)
+                elif field_value is None:
+                    continue
+                elif sys.argv[0].endswith("pytest") and "--pdb" in sys.argv:
+                    node_lineno = node.lineno if hasattr(node, "lineno") else -1
+                    lined_code = "\n".join(
+                        f"{'--> ' if lineno + 1 == node_lineno else '    '}{line}" for lineno, line in enumerate(code.split("\n"))
+                    )
+                    print(f"   * ignoring field: {field_name} = {repr(field_value)} from {repr(node)} in\n\n{lined_code}\n\n")
+                    breakpoint()
         else:
-            print("Termlog Warning [Unhandled ast.Node]:", node, ", ".join([d for d in dir(node) if not d.startswith("_")]))
+            node_lineno = node.lineno if hasattr(node, "lineno") else -1
+            lined_code = "\n".join(
+                f"{'--> ' if lineno + 1 == node_lineno else '    '}{line}" for lineno, line in enumerate(code.split("\n"))
+            )
+            print(f"Termlog Warning [Unhandled ast.Node]: {repr(node)} => {node_data} in \n\n{lined_code}\n\n")
+            pass
 
         if count > 4096:  # to prevent a runaway queue
             break

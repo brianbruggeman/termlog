@@ -110,6 +110,10 @@ def format(
         try:
             string = f"{string}{separator}{msg}"
         except TypeError:
-            msg.fields = {}
-            string = f"{string}{separator}{msg}"
+            try:
+                msg.fields = {}
+                string = f"{string}{separator}{msg}"
+            except Exception as e:
+                print(f"error: {e}")
+                pass
     return string

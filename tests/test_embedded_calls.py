@@ -17,4 +17,4 @@ def test_simple_embedded_calls():
 
     message = "green"
     output = json.loads(format(f"A {red(message)} message!", json=True, color=False, add_timestamp=False))
-    assert output == {"data": "A green message!", "message": "green"}
+    assert output == {"data": "A green message!", "message": "green", "output": None}
